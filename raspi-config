@@ -69,6 +69,35 @@ EOF
 The filesystem will be enlarged upon the next reboot" 20 60 2
 }
 
+do_shrink_rootfs() {
+  whiptail --msgbox "Have been shrinking the SD-card.\n\
+On next boot run raspi-config and expand rootfs" 20 60 2
+}
+
+do_rpi_update(){
+  whiptail --yesno "Would you like to install Git?\n\
+rpi-update depends on Git to update itself" 8 40 2 \
+    --yes-button "Install Git" --no-button No
+  RET=$?
+  if [ $RET -eq 0 ]; then
+    apt-get install git-core;
+  #else return 1
+  fi
+  
+  wget http://goo.gl/1BOfJ -O /usr/bin/rpi-update &&
+  chmod +x /usr/bin/rpi-update
+  whiptail --yesno "Hexxeh's rpi-update has been installed.\n\
+Would you like to run rpi-update now?" 8 60 2 \
+    --yes-button Yes --no-button No
+  RET=$?
+  if [ $RET -eq 0 ]; then
+    rpi-update;
+	ASK_TO_REBOOT=1
+  #else return 1
+  fi
+  whiptail --msgbox "in the future run 'sudo rpi-update' to update the firmware manually" 8 40 2
+}
+
 set_config_var() {
   lua - "$1" "$2" "$3" <<EOF > "$3.bak"
 local key=assert(arg[1])
@@ -410,6 +439,7 @@ while true; do
   FUN=$(whiptail --menu "Raspi-config" 20 80 12 --cancel-button Finish --ok-button Select \
     "info" "Information about this tool" \
     "expand_rootfs" "Expand root partition to fill SD card" \
+    "shrink_rootfs" "Shrink root partition to minimal SD card size for backup" \
     "overscan" "Change overscan" \
     "configure_keyboard" "Set keyboard layout" \
     "change_pass" "Change password for 'pi' user" \
@@ -420,6 +450,7 @@ while true; do
     "ssh" "Enable or disable ssh server" \
     "boot_behaviour" "Start desktop on boot?" \
     "update" "Try to upgrade raspi-config" \
+    "rpi_update" "Install rpi-update for getting firmware updates" \
     3>&1 1>&2 2>&3)
   RET=$?
   if [ $RET -eq 1 ]; then
