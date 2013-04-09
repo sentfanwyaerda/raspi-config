@@ -3,5 +3,6 @@
 - more information on [elinux.org](http://elinux.org/RPi_raspi-config)
 
 ####add-on
-- Hexxeh his [rpi-update](https://github.com/Hexxeh/rpi-update)
-- shrink rootfs -- I wanted to be able to [shrink](http://www.howtoforge.com/linux_resizing_ext3_partitions) the SD-card to a minimum before backuping through dd or Win32DiskImager
+- Hexxeh's [rpi-update](https://github.com/Hexxeh/rpi-update) -- firmware update method
+- shrink rootfs -- To [shrink](http://www.howtoforge.com/linux_resizing_ext3_partitions) the SD-card to a bare minimum before backuping through *dd* or *Win32DiskImager*
+- system upgrade -- updates and upgrades all installed programms
