@@ -4,4 +4,4 @@
 
 ####add-on
 - Hexxeh his [rpi-update](https://github.com/Hexxeh/rpi-update)
-- shrink rootfs -- I wanted to be able to shrink the SD-card to a minimum before backuping through dd or Win32DiskImager
+- shrink rootfs -- I wanted to be able to [shrink](http://www.howtoforge.com/linux_resizing_ext3_partitions) the SD-card to a minimum before backuping through dd or Win32DiskImager

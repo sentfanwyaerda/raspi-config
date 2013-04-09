@@ -70,7 +70,62 @@ The filesystem will be enlarged upon the next reboot" 20 60 2
 }
 
 do_shrink_rootfs() {
-  whiptail --msgbox "Have been shrinking the SD-card.\n\
+  whiptail --yesno "Would you like to install BC?\n\
+  it is needed to calculate additional space\n\
+  because we want to leave you 16M free" 8 40 2 \
+    --yes-button No --no-button "Install BC"
+  RET=$?
+  if [ $RET -eq 1 ]; then
+    apt-get install bc;
+  #else return 1
+  fi
+  
+  whiptail --yesno "Do you want to fsck first?" 8 40 2 \
+    --yes-button Yes --no-button No
+  RET=$?
+  if [ $RET -eq 0 ]; then
+	fsck /dev/mmcblk0 -f -v -y;
+  #else return 1
+  fi
+  
+  # Get the starting offset of the root partition
+  PART_START=$(parted /dev/mmcblk0 -ms unit s p | grep "^2" | cut -f 2 -d:)
+  [ "$PART_START" ] || return 1
+  
+  BLOCK_SIZE=$(parted /dev/mmcblk0 -ms unit s p | grep "^/dev/mmcblk0" | cut -f 4 -d:)
+  [ "$BLOCK_SIZE" ] || return 1
+  
+  # Get current size of the root partition before shrinking
+  OLD_SIZE=$(df -H | grep "^rootfs" | sed -r 's/\s+/:/' | sed -r 's/\s+/:/' | sed -r 's/\s+/:/' | sed -r 's/\s+/:/' | sed -r 's/\s+/:/' | cut -f 2 -d:)
+  [ "$OLD_SIZE" ] || return 1
+  
+  # Get minimum size of the root partition to shrink
+  PART_SIZE=$(df -B$BLOCK_SIZE | grep "^rootfs" | sed -r 's/\s+/:/' | sed -r 's/\s+/:/' | sed -r 's/\s+/:/' | sed -r 's/\s+/:/' | sed -r 's/\s+/:/' | cut -f 3 -d:)
+  [ "$PART_SIZE" ] || return 1
+  
+  #makes sure the shrink leaves 16M free
+  NEXT_SIZE=$(echo "$PART_SIZE+((16*1024*1024)/$BLOCK_SIZE)" | bc)
+  END=$(echo "$NEXT_SIZE+$PART_START" | bc)
+  
+  USED_SIZE=$(df -H | grep "^rootfs" | sed -r 's/\s+/:/' | sed -r 's/\s+/:/' | sed -r 's/\s+/:/' | sed -r 's/\s+/:/' | sed -r 's/\s+/:/' | cut -f 3 -d:)
+    
+  #untested!!
+  #fdisk /dev/mmcblk0 <<EOF
+  #p
+  #d
+  #2
+  #n
+  #p
+  #2
+  #$PART_START
+  #$END
+  #p
+  #w
+  #EOF
+  #ASK_TO_REBOOT=1
+  
+  whiptail --msgbox "The SD-card has been shrinked from $OLD_SIZE to about $USED_SIZE.\n\
+$PART_SIZE and +16M= $NEXT_SIZE, $BLOCK_SIZE/block : $PART_START - $END \n\
 On next boot run raspi-config and expand rootfs" 20 60 2
 }
 
@@ -96,6 +151,11 @@ Would you like to run rpi-update now?" 8 60 2 \
   #else return 1
   fi
   whiptail --msgbox "in the future run 'sudo rpi-update' to update the firmware manually" 8 40 2
+}
+
+do_system_upgrade() {
+	apt-get update && apt-get upgrade && apt-get autoclean;
+	whiptail --msgbox "Now, all programs are up to date!" 8 40 2
 }
 
 set_config_var() {
@@ -439,7 +499,7 @@ while true; do
   FUN=$(whiptail --menu "Raspi-config" 20 80 12 --cancel-button Finish --ok-button Select \
     "info" "Information about this tool" \
     "expand_rootfs" "Expand root partition to fill SD card" \
-    "shrink_rootfs" "Shrink root partition to minimal SD card size for backup" \
+    "shrink_rootfs" "* Shrink root partition to minimal SD card size for backup" \
     "overscan" "Change overscan" \
     "configure_keyboard" "Set keyboard layout" \
     "change_pass" "Change password for 'pi' user" \
@@ -450,7 +510,8 @@ while true; do
     "ssh" "Enable or disable ssh server" \
     "boot_behaviour" "Start desktop on boot?" \
     "update" "Try to upgrade raspi-config" \
-    "rpi_update" "Install rpi-update for getting firmware updates" \
+    "rpi_update" "* Install rpi-update for getting firmware updates" \
+    "system_upgrade" "* Upgrade all installed programs" \
     3>&1 1>&2 2>&3)
   RET=$?
   if [ $RET -eq 1 ]; then
