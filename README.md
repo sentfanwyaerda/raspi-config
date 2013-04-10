@@ -4,5 +4,7 @@
 
 ####add-on
 - Hexxeh's [rpi-update](https://github.com/Hexxeh/rpi-update) -- firmware update method
-- shrink rootfs -- To [shrink](http://www.howtoforge.com/linux_resizing_ext3_partitions) the SD-card to a bare minimum before backuping through *dd* or *Win32DiskImager*
+- **[EXPERIMENTAL]** shrink rootfs -- To [shrink](http://www.howtoforge.com/linux_resizing_ext3_partitions) the SD-card to a bare minimum before backuping through *dd* or *Win32DiskImager*
 - system upgrade -- updates and upgrades all installed programms
+- install and configure git
+- raspi-config can update (back to) the originial *or* update this altered forked version
