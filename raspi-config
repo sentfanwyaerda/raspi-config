@@ -135,7 +135,7 @@ rpi-update depends on Git to update itself" 8 40 2 \
     --yes-button "Install Git" --no-button No
   RET=$?
   if [ $RET -eq 0 ]; then
-    apt-get install git-core;
+	do_setup_git
   #else return 1
   fi
   
@@ -151,6 +151,30 @@ Would you like to run rpi-update now?" 8 60 2 \
   #else return 1
   fi
   whiptail --msgbox "in the future run 'sudo rpi-update' to update the firmware manually" 8 40 2
+}
+git_install(){
+    apt-get install git-core;
+}
+do_setup_git(){
+	git_install
+	
+    NAME=$(whiptail --inputbox "Which name do you want to use when committing changes in Git?" \
+      20 70 -- "$NAME" 3>&1 1>&2 2>&3)
+    if [ $? -eq 0 ]; then
+		git config --global user.name $NAME
+    fi
+    EMAIL=$(whiptail --inputbox "By which email address can people reach you?" \
+      20 70 -- "$EMAIL" 3>&1 1>&2 2>&3)
+    if [ $? -eq 0 ]; then
+		git config --global user.email $EMAIL
+    fi
+    LENGTH=$(whiptail --inputbox "How many seconds do you want your credentials to be cached? e.g. 0/900/3600/86400" \
+      20 70 -- "900" 3>&1 1>&2 2>&3)
+    if [ $? -eq 0 ]; then
+		git config --global credential.helper "cache --timeout=$LENGTH"
+    fi
+	echo "Global Git Configuration:\n" &&
+	git config --global -l
 }
 
 do_system_upgrade() {
@@ -420,17 +444,43 @@ do_boot_behaviour() {
       return 1
     fi
   else
+	#apt-get install lightdm &&
     whiptail --msgbox "Do sudo apt-get install lightdm to allow configuration of boot to desktop" 20 60 2
     return 1
   fi
 }
 
 do_update() {
-  apt-get update &&
-  apt-get install raspi-config &&
-  printf "Sleeping 5 seconds before reloading raspi-config\n" &&
-  sleep 5 &&
-  exec raspi-config
+ whiptail --yesno "Which version of raspi-config do you want to use?\n\
+ the altered version is available from:\n\
+ https://github.com/sentfanwyaerda/raspi-config" 20 60 2 \
+    --yes-button "Altered" --no-button "Original" 
+  RET=$?
+  if [ $RET -eq 0 ]; then
+	git_installls 
+	RASPIGITDIR=$(whiptail --inputbox "Where do you want to install raspi-config?" \
+      20 70 -- "/var/lib/raspi-config" 3>&1 1>&2 2>&3)
+	
+	if [ -d $RASPIGITDIR ]; then
+		git pull --work-tree=$RASPIGITDIR
+	else
+		mkdir $RASPIGITDIR &&
+		git clone https://github.com/sentfanwyaerda/raspi-config.git $RASPIGITDIR && 
+		ln -s $RASPIGITDIR/raspi-config /usr/bin/raspi-config
+	fi
+	
+	printf "Sleeping 5 seconds before reloading raspi-config\n" &&
+	sleep 5 &&
+	exec raspi-config
+  elif [ $RET -eq 1 ]; then
+	apt-get update &&
+	apt-get install raspi-config &&
+	printf "Sleeping 5 seconds before reloading raspi-config\n" &&
+	sleep 5 &&
+	exec raspi-config
+  else
+    return $RET
+  fi
 }
 
 do_finish() {
@@ -512,6 +562,7 @@ while true; do
     "update" "Try to upgrade raspi-config" \
     "rpi_update" "* Install rpi-update for getting firmware updates" \
     "system_upgrade" "* Upgrade all installed programs" \
+	"setup_git" "* Setup Git with your name and email address" \
     3>&1 1>&2 2>&3)
   RET=$?
   if [ $RET -eq 1 ]; then
