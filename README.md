@@ -20,6 +20,5 @@
 - [Kali](http://kali.org/) (previous known as BackTrack)
 
 ####Easy install:
-`` wget -O /sbin/raspi-config http://raw.github.com/sentfanwyaerda/raspi-config/master/raspi-config ``
-You also might do this before, because the onboard clock ``date`` on the RaspberryPi says it's 1970.
-`` apt-get install ntp fake-hwclock ``
+``` wget -O /sbin/raspi-config http://raw.github.com/sentfanwyaerda/raspi-config/master/raspi-config ```
+You also might do this before, because the onboard clock ``date`` of the RaspberryPi says it's 1970: `` apt-get install ntp fake-hwclock ``.

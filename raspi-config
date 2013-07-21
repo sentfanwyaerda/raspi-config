@@ -644,7 +644,7 @@ do_ftp_install() {
 }
 
 patch_rc_local(){
-	wget -O /etc/rc.local http://raw.github.com/sentfanwyaerda/raspi-config/master/kali/rc.local && chmod +x /etc/rc.local && sh /etc/rc.local ;;
+	wget -O /etc/rc.local http://raw.github.com/sentfanwyaerda/raspi-config/master/kali/rc.local && chmod +x /etc/rc.local && sh /etc/rc.local
 }
 
 
