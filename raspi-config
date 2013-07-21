@@ -625,34 +625,39 @@ do_setup_git(){
 
 do_fixedvirtualip() {
   # /etc/rc.local "ifconfig eth0:0 192.168.2.100 \n route add -host 192.168.2.100 dev eth0:0"
-  sleep 1
+  patch_rc_local
 }
 
 do_webinstall() {
-  # apt-get install apache php mysql php-gd geo-ip
-  # /etc/rc.local "service apache2 restart \n service mysql restart"
-  sleep 1
+  apt-get install apache php mysql php-gd geo-ip
+  # #/etc/rc.local "service apache2 restart \n service mysql restart"
+  patch_rc_local ;
 }
 do_samba_install() {
-  # apt-get install smb samba
-  # share: /var/www
-  # /etc/rc.local "service samba restart"
-  sleep 1
+  # apt-get install smb samba #(installed by default)
+  # create share: /var/www
+  # @/etc/rc.local "service samba restart"
+  patch_rc_local ;
 }
 do_ftp_install() {
   sleep 1
 }
 
-
+patch_rc_local(){
+	wget -O /etc/rc.local http://raw.github.com/sentfanwyaerda/raspi-config/master/kali/rc.local && chmod +x /etc/rc.local && sh /etc/rc.local ;;
+}
 
 
 
 
 do_additional_menu() {
   FUN=$(whiptail --title "Raspberry Pi Software Configuration Tool (raspi-config)" --menu "Additional Options" $WT_HEIGHT $WT_WIDTH $WT_MENU_HEIGHT --cancel-button Back --ok-button Select \
-    "1 RaspberryPi Firmware Update" ".." \
-    "2 Upgrade all installed programs" ".." \
-	"3 Configure as webserver >" ".." \
+    "0 Add user" "" \
+    "1 Install Aptitude" "aptitude is an interface to apt-get" \
+    "2 Set the Clock" "you can set ntpd to synchronize with the internet" \
+    "3 RaspberryPi Firmware Update" ".." \
+    "4 Upgrade all installed programs" ".." \
+	"5 Configure as webserver >" ".." \
     "x Shrink root partition (experimental)" ".." \
     3>&1 1>&2 2>&3)
   RET=$?
@@ -660,14 +665,45 @@ do_additional_menu() {
     return 0
   elif [ $RET -eq 0 ]; then
     case "$FUN" in
-      1\ *) do_rpi_update ;;
-      2\ *) do_system_upgrade ;;
-      3\ *) do_server_menu ;;
+	  0\ *) do_add_user ;;
+	  1\ *) do_aptitude ;;
+	  2\ *) do_ntp_install ;;
+      3\ *) do_rpi_update ;;
+      4\ *) do_system_upgrade ;;
+      5\ *) do_server_menu ;;
       x\ *) do_shrink_rootfs ;;
       *) whiptail --msgbox "Programmer error: unrecognized option" 20 60 1 ;;
     esac || whiptail --msgbox "There was an error running option $FUN" 20 60 1
   fi
 }
+
+do_add_user() {
+
+    NAME=$(whiptail --inputbox "Which username do you want to add to your system?" \
+      20 70 -- "$NAME" 3>&1 1>&2 2>&3)
+    if [ $? -eq 0 ]; then
+      adduser $NAME
+    fi
+      PASSWD=$(whiptail --inputbox "And the password you want to use?" \
+      20 70 -- "$PASSWD" 3>&1 1>&2 2>&3)
+    if [ $? -eq 0 ]; then
+      passwd $NAME $PASSWD
+    fi
+}
+
+do_aptitude(){
+	apt-get install aptitude ;
+}
+
+do_ntp_install() {
+	apt-get install ntp fake-hwclock ;
+	
+	# @/etc/rc.local "service ntp restart"
+	patch_rc_local ;
+	# ntpq -p && hwclock -w ;;
+}
+
+
 do_shrink_rootfs() {
   whiptail --yesno "Would you like to install BC?\n\
 it is needed to calculate additional space\n\
