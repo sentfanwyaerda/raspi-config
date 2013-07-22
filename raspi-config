@@ -632,11 +632,18 @@ do_webinstall() {
   apt-get install apache php mysql php-gd geo-ip
   # #/etc/rc.local "service apache2 restart \n service mysql restart"
   patch_rc_local ;
+  echo "Include /var/www/domains/httpd.conf/*.conf" >> /etc/apache2/apache2.conf
 }
 do_samba_install() {
   # apt-get install smb samba #(installed by default)
   # create share: /var/www
+  # @/etc/samba/smb.conf ""
   # @/etc/rc.local "service samba restart"
+  
+  chmod 0777 /var/www -R && chown www-data /var/www -R && chgrp www-data /var/www -R
+  
+  echo "[www]\n\tcomment = Webroot\n\tpath = /var/www\n\tcreate mask = 0777\n\tdirectory mask = 0777\nforce create mode = 0777\n\tforce directory mode = 0777\n\twriteable = yes\n\tguest ok = yes\n\tread only = no\n\tbrowseable = yes\n\tlocking = no\n\tforce user = www-data\n\tforce group = www-data" >> /etc/samba/smb.conf
+  
   patch_rc_local ;
 }
 do_ftp_install() {
@@ -657,7 +664,8 @@ do_additional_menu() {
     "2 Set the Clock" "you can set ntpd to synchronize with the internet" \
     "3 RaspberryPi Firmware Update" ".." \
     "4 Upgrade all installed programs" ".." \
-	"5 Configure as webserver >" ".." \
+	"5 Refresh Network Connections" "" \
+	"6 Configure as webserver >" ".." \
     "x Shrink root partition (experimental)" ".." \
     3>&1 1>&2 2>&3)
   RET=$?
@@ -670,7 +678,8 @@ do_additional_menu() {
 	  2\ *) do_ntp_install ;;
       3\ *) do_rpi_update ;;
       4\ *) do_system_upgrade ;;
-      5\ *) do_server_menu ;;
+	  5\ *) do_network_refesh ;;
+      6\ *) do_server_menu ;;
       x\ *) do_shrink_rootfs ;;
       *) whiptail --msgbox "Programmer error: unrecognized option" 20 60 1 ;;
     esac || whiptail --msgbox "There was an error running option $FUN" 20 60 1
@@ -678,17 +687,18 @@ do_additional_menu() {
 }
 
 do_add_user() {
-
     NAME=$(whiptail --inputbox "Which username do you want to add to your system?" \
       20 70 -- "$NAME" 3>&1 1>&2 2>&3)
     if [ $? -eq 0 ]; then
-      adduser $NAME
+      adduser $NAME 
     fi
-      PASSWD=$(whiptail --inputbox "And the password you want to use?" \
-      20 70 -- "$PASSWD" 3>&1 1>&2 2>&3)
-    if [ $? -eq 0 ]; then
-      passwd $NAME $PASSWD
-    fi
+#      PASSWD=$(whiptail --inputbox "And the password you want to use?" \
+#      20 70 -- "$PASSWD" 3>&1 1>&2 2>&3)
+#    if [ $? -eq 0 ]; then
+#      passwd $NAME $PASSWD
+#    fi
+    #+ sudoer $NAME
+	echo '$NAME ALL=(ALL:ALL) ALL' >> /etc/sudoers
 }
 
 do_aptitude(){
@@ -701,6 +711,10 @@ do_ntp_install() {
 	# @/etc/rc.local "service ntp restart"
 	patch_rc_local ;
 	# ntpq -p && hwclock -w ;;
+}
+
+do_network_refesh() {
+	ifdown eth0 && ifup eth0
 }
 
 
@@ -765,7 +779,8 @@ On next boot run raspi-config and expand rootfs" 20 60 2
 
 do_rpi_update(){
   whiptail --yesno "Would you like to install Git?\n\
-  rpi-update depends on Git to update itself" 8 40 2 \
+  rpi-update depends on Git to update itself\n\
+  feel free to say NO when Git is already installed!" 8 40 2 \
     --yes-button "Install Git" --no-button No
   RET=$?
   if [ $RET -eq 0 ]; then

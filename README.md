@@ -15,10 +15,12 @@
 	- setup backup method (cronjob /var/www to *.gz on external location)
 	- patch apache to use *.conf in /var/www/domains/httpd.conf/
 
-####Tested with
+####Tested with:
 - Raspbian
 - [Kali](http://kali.org/) (previous known as BackTrack)
 
 ####Easy install:
+**if not already available through the RaspberryPi flavoured Linux distrubution you use**
 ``` wget -O /sbin/raspi-config http://raw.github.com/sentfanwyaerda/raspi-config/master/raspi-config ```
+
 You also might do this before, because the onboard clock ``date`` of the RaspberryPi says it's 1970: `` apt-get install ntp fake-hwclock ``.
