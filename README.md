@@ -10,7 +10,7 @@
 - semi-automated webserver configuration:
 	- install and configure git
 	- add a fixed ip-address to eth0:0
-	- install apache, mysql, php, gd, geoip, ..
+	- ~~install apache, mysql, php, gd, geoip, ..~~
 	- restore /var/www from a backup
 	- setup backup method (cronjob /var/www to *.gz on external location)
 	- patch apache to use *.conf in /var/www/domains/httpd.conf/
@@ -20,7 +20,7 @@
 - [Kali](http://kali.org/) (previous known as BackTrack)
 
 ####Easy install:
-**if not already available through the RaspberryPi flavoured Linux distrubution you use**
+*(if not already available through the RaspberryPi flavoured Linux distrubution you use)*
 ``` wget -O /sbin/raspi-config http://raw.github.com/sentfanwyaerda/raspi-config/master/raspi-config ```
 
-You also might do this before, because the onboard clock ``date`` of the RaspberryPi says it's 1970: `` apt-get install ntp fake-hwclock ``.
+In case your onboard clock of the RaspberryPi says it's 1970 (when you use ``date`` ): ``apt-get install ntp fake-hwclock``.

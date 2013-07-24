@@ -642,12 +642,18 @@ do_samba_install() {
   
   chmod 0777 /var/www -R && chown www-data /var/www -R && chgrp www-data /var/www -R
   
-  echo "[www]\n\tcomment = Webroot\n\tpath = /var/www\n\tcreate mask = 0777\n\tdirectory mask = 0777\nforce create mode = 0777\n\tforce directory mode = 0777\n\twriteable = yes\n\tguest ok = yes\n\tread only = no\n\tbrowseable = yes\n\tlocking = no\n\tforce user = www-data\n\tforce group = www-data" >> /etc/samba/smb.conf
+  echo "[www]\n\tcomment = Webroot\n\tpath = /var/www\n\tcreate mask = 0777\n\tdirectory mask = 0777\nforce create mode = 0777\n\tforce directory mode = 0777\n\twriteable = yes\n\tguest ok = yes\n\tread only = no\n\tbrowseable = yes\n\tlocking = no\n\tforce user = www-data\n\tforce group = www-data\n\twrite list = pi, kali, @www-data\n\tinherit permissions = yes\n" >> /etc/samba/smb.conf
   
   patch_rc_local ;
 }
 do_ftp_install() {
   sleep 1
+}
+
+do_backup_set_cronjob() {
+	## crontab -e << @midnight tar -cf /var/backups/`uname -n`-`uname -m`-www\[`date +%Y-%m-%d`\].tgz -z /var/www
+	#cronjob: +&& *ftp-upload* /var/backups/`uname -n`-`uname -m`-www\[`date +%Y-%m-%d`\].tgz ftp://somewhere/backups/
+	
 }
 
 patch_rc_local(){
