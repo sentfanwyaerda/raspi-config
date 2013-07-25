@@ -583,6 +583,7 @@ do_server_menu() {
     "S1 Setup Git" "Installing and configuring Git" \
     "S2 Add virtual fixed IP address" "Binds eth0:0 with a static IP address while eth0 gets dhcp." \
     "S3 Install Webserver software" "Apache, MySQL, PHP, ..." \
+	"S4 Install Samba server" "" \
     3>&1 1>&2 2>&3)
   RET=$?
   if [ $RET -eq 1 ]; then
@@ -592,6 +593,7 @@ do_server_menu() {
       S1\ *) do_setup_git ;;
       S2\ *) do_fixedvitualip ;;
       S3\ *) do_webinstall ;;
+	  S4\ *) do_samba_install ;;
       *) whiptail --msgbox "Programmer error: unrecognized option" 20 60 1 ;;
     esac || whiptail --msgbox "There was an error running option $FUN" 20 60 1
   fi
@@ -629,7 +631,7 @@ do_fixedvirtualip() {
 }
 
 do_webinstall() {
-  apt-get install apache php mysql php-gd geo-ip
+  apt-get install apache2 libapache2-mod-php5 mysql php-gd geoip
   # #/etc/rc.local "service apache2 restart \n service mysql restart"
   patch_rc_local ;
   echo "Include /var/www/domains/httpd.conf/*.conf" >> /etc/apache2/apache2.conf
