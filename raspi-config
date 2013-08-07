@@ -655,7 +655,7 @@ do_ftp_install() {
 do_backup_set_cronjob() {
 	## crontab -e << @midnight tar -cf /var/backups/`uname -n`-`uname -m`-www\[`date +%Y-%m-%d`\].tgz -z /var/www
 	#cronjob: +&& *ftp-upload* /var/backups/`uname -n`-`uname -m`-www\[`date +%Y-%m-%d`\].tgz ftp://somewhere/backups/
-	
+	sleep 1
 }
 
 patch_rc_local(){
