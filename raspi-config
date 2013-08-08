@@ -644,7 +644,9 @@ do_samba_install() {
   
   chmod 0777 /var/www -R && chown www-data /var/www -R && chgrp www-data /var/www -R
   
-  echo -e "[www]\n\r\tcomment = Webroot\n\r\tpath = /var/www\n\r\tcreate mask = 0777\n\r\tdirectory mask = 0777\nforce create mode = 0777\n\r\tforce directory mode = 0777\n\r\twriteable = yes\n\r\tguest ok = yes\n\r\tread only = no\n\r\tbrowseable = yes\n\r\tlocking = no\n\r\tforce user = www-data\n\r\tforce group = www-data\n\r\twrite list = pi, kali, @www-data\n\r\tinherit permissions = yes\n" >> /etc/samba/smb.conf
+  echo -e "[www]\n\r\tcomment = Webroot\n\r\tpath = /var/www\n\r\tcreate mask = 0777\n\r\tdirectory mask = 0777\nforce create mode = 0777\n\r\tforce directory mode = 0777\n\r\twriteable = yes\n\r\tguest ok = yes\n\r\tread only = no\n\r\tbrowseable = yes\n\r\tlocking = no\n\r\tforce user = www-data\n\r\tforce group = www-data\n\r\twrite list = pi, kali, @www-data\n\r\tinherit permissions = yes\n\r\n\r" >> /etc/samba/smb.conf
+  
+  echo -e "[backups]\n\r\tcomment = backups\n\r\tpath = /var/backups\n\r\tcreate mask = 0644\n\r\tdirectory mask = 0644\nforce create mode = 0644\n\r\tforce directory mode = 0644\n\r\twriteable = no\n\r\tguest ok = yes\n\r\tread only = yes\n\r\tbrowseable = yes\n\r\tlocking = no\n\r\tforce user = www-data\n\r\tforce group = www-data\n\r\twrite list = pi, kali, @www-data\n\r\tinherit permissions = yes\n\r\n\r" >> /etc/samba/smb.conf
   
   patch_rc_local ;
 }
@@ -795,8 +797,11 @@ do_rpi_update(){
     do_setup_git
   #else return 1
   fi
-  wget http://goo.gl/1BOfJ -O /usr/bin/rpi-update &&
-  chmod +x /usr/bin/rpi-update
+  wget https://raw.github.com/Hexxeh/rpi-update/master/rpi-update -O /usr/bin/rpi-update && chmod +x /usr/bin/rpi-update
+  
+  apt-get install ntpdate ca-certificates
+  ntpdate -u ntp.ubuntu.com
+  
   whiptail --yesno "Hexxeh's rpi-update has been installed.\n\
 Would you like to run rpi-update now?" 8 60 2 \
     --yes-button Yes --no-button No
