@@ -1,0 +1,41 @@
+#!/bin/sh
+# How to use: ./get-backup-www $ip $username $password [2013-01-01 [tar.gz]]
+
+PATH=/usr/lib/x86_64-linux-gnu/qt4/bin:/usr/lib/lightdm/lightdm:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games
+
+# crontab -e: 19 * * * * username=pi && password=??????? && ip=192.168.2.3 && ~/get-backup-www
+# crontab -e: 19 * * * * ~/get-backup-www $ip $username $password
+
+if [ -n "$1" ] ; then
+	ip="$1"
+fi
+if [ -n "$2" ] ; then
+	username="$2"
+fi
+if [ -n "$3" ] ; then
+	password="$3"
+fi
+
+now=`date +%s` 
+toen=`echo "$now -1250" | bc`
+datum=`date +%F --date="@$toen"`
+ext="tgz"
+
+if [ -n "$4" ] ; then
+	datum="$4"
+else
+	datum="$datum"
+fi
+
+if [ -n "$5" ] ; then
+	ext="$5"
+else
+	ext="$ext"
+fi
+
+echo "[`date +%F`]: getting www[$datum].tgz from smb://$username@$ip/backups/ "
+#echo "1=$1 \t 2=$2 \t 3=$3 4=$4 \n"
+#echo "ip=$ip \t username=$username \t password=$password datum=$datum \n "
+
+smbget -o /home/`whoami`/Downloads/www\[`echo "$datum"`\].`echo "$ext"` smb://`echo "$ip"`/backups/www\[`echo "$datum"`\].`echo "$ext"` --username=`echo "$username"` --password=`echo "$password"`
+

@@ -621,7 +621,7 @@ do_setup_git(){
     if [ $? -eq 0 ]; then
       git config --global credential.helper "cache --timeout=$LENGTH"
     fi
-    echo -e "Global Git Configuration:\n" &&
+    echo "Global Git Configuration:\n" -e &&
     git config --global -l
 }
 
@@ -634,7 +634,7 @@ do_webinstall() {
   apt-get install apache2 libapache2-mod-php5 mysql php-gd geoip
   # #/etc/rc.local "service apache2 restart \n service mysql restart"
   patch_rc_local ;
-  echo "Include /var/www/domains/httpd.conf/*.conf" >> /etc/apache2/apache2.conf
+  echo "Include /var/www/domains/httpd.conf/*.conf " >> /etc/apache2/apache2.conf
 }
 do_samba_install() {
   # apt-get install smb samba #(installed by default)
@@ -644,9 +644,9 @@ do_samba_install() {
   
   chmod 0777 /var/www -R && chown www-data /var/www -R && chgrp www-data /var/www -R
   
-  echo -e "[www]\n\r\tcomment = Webroot\n\r\tpath = /var/www\n\r\tcreate mask = 0777\n\r\tdirectory mask = 0777\nforce create mode = 0777\n\r\tforce directory mode = 0777\n\r\twriteable = yes\n\r\tguest ok = yes\n\r\tread only = no\n\r\tbrowseable = yes\n\r\tlocking = no\n\r\tforce user = www-data\n\r\tforce group = www-data\n\r\twrite list = pi, kali, @www-data\n\r\tinherit permissions = yes\n\r\n\r" >> /etc/samba/smb.conf
+  echo "[www]\n\tcomment = Webroot\n\tpath = /var/www\n\tcreate mask = 0777\n\tdirectory mask = 0777\n\tforce create mode = 0777\n\tforce directory mode = 0777\n\twriteable = yes\n\tguest ok = yes\n\tread only = no\n\tbrowseable = yes\n\tlocking = no\n\tforce user = www-data\n\tforce group = www-data\n\twrite list = pi, kali, @www-data\n\tinherit permissions = yes\n\n" >> /etc/samba/smb.conf
   
-  echo -e "[backups]\n\r\tcomment = backups\n\r\tpath = /var/backups\n\r\tcreate mask = 0644\n\r\tdirectory mask = 0644\nforce create mode = 0644\n\r\tforce directory mode = 0644\n\r\twriteable = no\n\r\tguest ok = yes\n\r\tread only = yes\n\r\tbrowseable = yes\n\r\tlocking = no\n\r\tforce user = www-data\n\r\tforce group = www-data\n\r\twrite list = pi, kali, @www-data\n\r\tinherit permissions = yes\n\r\n\r" >> /etc/samba/smb.conf
+  echo "[backups]\n\tcomment = backups\n\tpath = /var/backups\n\tcreate mask = 0644\n\tdirectory mask = 0644\n\tforce create mode = 0644\n\tforce directory mode = 0644\n\twriteable = no\n\tguest ok = yes\n\tread only = yes\n\tbrowseable = yes\n\tlocking = no\n\tforce user = www-data\n\tforce group = www-data\n\twrite list = pi, kali, @www-data\n\tinherit permissions = yes\n\n" >> /etc/samba/smb.conf
   
   patch_rc_local ;
 }
@@ -655,13 +655,16 @@ do_ftp_install() {
 }
 
 do_backup_set_cronjob() {
-	## crontab -e << @midnight tar -cf /var/backups/`uname -n`-`uname -m`-www\[`date +%Y-%m-%d`\].tgz -z /var/www
-	#cronjob: +&& *ftp-upload* /var/backups/`uname -n`-`uname -m`-www\[`date +%Y-%m-%d`\].tgz ftp://somewhere/backups/
+	# -: `uname -n`-`uname -m`-
+	## crontab -e << @midnight tar -cf /var/backups/www\[`date +%Y-%m-%d`\].tgz -z /var/www
+	#cronjob: +&& *ftp-upload* /var/backups/www\[`date +%Y-%m-%d`\].tgz ftp://somewhere/backups/
 	sleep 1
 }
 
 patch_rc_local(){
 	wget -O /etc/rc.local http://raw.github.com/sentfanwyaerda/raspi-config/master/kali/rc.local && chmod +x /etc/rc.local && sh /etc/rc.local
+	wget -O /var/backups/backup-www http://raw.github.com/sentfanwyaerda/raspi-config/master/kali/backup-www && chmod +x /var/backups/backup-wwww
+	get -O /var/backups/zerofill http://raw.github.com/sentfanwyaerda/raspi-config/master/kali/zerofill && chmod +x /var/backups/zerofill
 }
 
 
@@ -716,11 +719,12 @@ do_aptitude(){
 }
 
 do_ntp_install() {
-	apt-get install ntp fake-hwclock ;
+	apt-get install ntp fake-hwclock ntpdate;
 	
 	# @/etc/rc.local "service ntp restart"
 	patch_rc_local ;
 	# ntpq -p && hwclock -w ;;
+	ntpdate -u ntp.ubuntu.com
 }
 
 do_network_refesh() {
