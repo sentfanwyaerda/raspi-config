@@ -19,9 +19,14 @@ service ntp restart
 ifconfig eth0:0 192.168.2.100
 route add -host 192.168.2.100 dev eth0:0
 
-service apache restart
+/etc/init.d/apache2 restart
+#service apache restart
 service mysql restart
 
 service samba restart
+
+if [ ! -f /var/zero.txt ]; then
+	rm /var/zero.txt
+fi
 
 exit 0

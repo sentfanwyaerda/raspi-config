@@ -1,0 +1,2 @@
+#!/bin/sh
+dd if=/dev/zero of=/var/zero.txt
