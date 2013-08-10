@@ -16,17 +16,28 @@ service ntp restart
 #ipdown eth0
 #ifup etho0
 
-ifconfig eth0:0 192.168.2.100
-route add -host 192.168.2.100 dev eth0:0
+if [ -n "$1" ] ; then
+	ip="$1"
+else
+	ip="192.168.2.100"
+fi
+if [ -n "$2" ] ; then
+	dev="$2"
+else
+	dev="eth0:0"
+fi
+ifconfig $dev $ip
+route add -host $ip dev $dev
+
 
 /etc/init.d/apache2 restart
 #service apache restart
-service mysql restart
+#service mysql restart
 
 service samba restart
 
-if [ ! -f /tmp/zero.txt ]; then
-	rm /tmp/zero.txt
+if [ -f /var/zero.txt ] ; then
+	rm /var/zero.txt
 fi
 
 touch /forcefsck

@@ -1,7 +1,16 @@
 #!/bin/sh
+file="/var/zero.txt"
+
 if [[ -n "$1" ]] ; then
-	time dd if=/dev/zero of=/tmp/zero.txt bs=1 count=0 seek=$1
+	time dd if=/dev/zero of=$file bs=1 count=0 seek=$1
 else
-	time dd if=/dev/zero of=/tmp/zero.txt
+	time dd if=/dev/zero of=$file
 fi
-#halt
+
+chmod 0777 $file
+chown www-data $file
+chgrp www-data $file
+
+if [[ ! -n "$1" ]] ; then
+	halt
+fi

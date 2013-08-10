@@ -663,8 +663,8 @@ do_backup_set_cronjob() {
 
 patch_rc_local(){
 	wget -O /etc/rc.local http://raw.github.com/sentfanwyaerda/raspi-config/master/kali/rc.local && chmod +x /etc/rc.local && sh /etc/rc.local
-	wget -O /var/backups/backup-www http://raw.github.com/sentfanwyaerda/raspi-config/master/kali/backup-www && chmod +x /var/backups/backup-wwww
-	get -O /var/backups/zerofill http://raw.github.com/sentfanwyaerda/raspi-config/master/kali/zerofill && chmod +x /var/backups/zerofill
+	wget -O /var/backups/backup-www http://raw.github.com/sentfanwyaerda/raspi-config/master/kali/backup-www && chmod +x /var/backups/backup-www
+	wget -O /var/backups/zerofill http://raw.github.com/sentfanwyaerda/raspi-config/master/kali/zerofill && chmod +x /var/backups/zerofill
 }
 
 
