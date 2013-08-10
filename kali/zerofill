@@ -1,2 +1,7 @@
 #!/bin/sh
-dd if=/dev/zero of=/var/zero.txt
+if [[ -n "$1" ]] ; then
+	time dd if=/dev/zero of=/tmp/zero.txt bs=1 count=0 seek=$1
+else
+	time dd if=/dev/zero of=/tmp/zero.txt
+fi
+#halt

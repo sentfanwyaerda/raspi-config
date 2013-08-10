@@ -25,8 +25,10 @@ service mysql restart
 
 service samba restart
 
-if [ ! -f /var/zero.txt ]; then
-	rm /var/zero.txt
+if [ ! -f /tmp/zero.txt ]; then
+	rm /tmp/zero.txt
 fi
+
+touch /forcefsck
 
 exit 0
