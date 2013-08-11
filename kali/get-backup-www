@@ -1,10 +1,11 @@
 #!/bin/sh
 # How to use: ./get-backup-www $ip $username $password [2013-01-01 [tar.gz]]
 
-#if [ "$1"=="--help" ]; then
-#	echo "./get-backup-www ip username password [date=`date +%F`] [extension=tgz]"
-#	exit 1;
-#fi
+
+if [ -n $1 ] && [ -z $3 ] && [ -z $3 ] && [ $1=="--help" ]; then
+	echo "./get-backup-www ip username password [date=`date +%F`] [extension=tgz]"
+	exit 1
+fi
 
 PATH=/usr/lib/x86_64-linux-gnu/qt4/bin:/usr/lib/lightdm/lightdm:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games
 
@@ -42,25 +43,23 @@ base="/home/`whoami`/Downloads/"
 file="www[$datum].$ext"
 md5file="$file.md5"
 
-echo "[`date +%F`]: getting $file from smb://$username@$ip/backups/ "
+echo "[$0][`date +%F`]: initiate getting $file from smb://$username@$ip/backups/ "
 #echo "1=$1 \t 2=$2 \t 3=$3 4=$4 \n"
 #echo "ip=$ip \t username=$username \t password=$password datum=$datum \n "
 
-if [ -f $base$md5file ] && [ -f $base$file]; then 
+if [ -f $base$md5file ] && [ -f $base$file ]; then 
 	str=`cd $base && md5sum -c $md5file > /dev/stdout`
-	##if [ "`echo $str | cut -d' ' -f 2`"=="OK" ]; then
 	if [ $? -eq 0 ]; then
-		echo "[$0] not removing previous backup $file"
+		echo "[$0]: of previous backup $file its integrety is `echo $str | cut -d' ' -f 2`"
 	else
-		echo "[$0] removing previous backup $file and $md5file"
+		echo "[$0]: removing previous backup $file and $md5file due to failed integrety"
 		rm $base$file
 	fi
-	echo "[debug] $str | `echo $str | cut -d' ' -f 2`==OK"
 fi
 
 
 if [ -f $base$md5file ]; then 
-	echo "[$0] $md5file already exists"
+	echo "[$0]: $md5file already exists"
 	md5old="`cat $base$md5file`"
 	
 	rm $base$md5file
@@ -68,44 +67,48 @@ if [ -f $base$md5file ]; then
 	chmod +rw $base$md5file
 	if [ ! -f $base$md5file ]; then
 		echo "$md5old" > $base$md5file
-		echo "[$0] downloading $md5file failed, restoring old value: $md5old"
+		echo "[$0]: downloading $md5file failed, restoring old value: $md5old"
 	else
-		echo "[$0] a fresh $md5file downloaded";
+		echo "[$0]: a fresh $md5file downloaded";
 	fi
 else
-	echo "[$0] $md5file not found"
+	echo "[$0]: $md5file not found"
 	md5old="00000000000000000000000000000000 $file"
 	smbget -o $base$md5file smb://$ip/backups/$md5file --username=$username --password=$password
-	chmod +rw $base$md5file
-	echo "[$0] $md5file downloaded";
+	if [ -f $base$md5file ]; then
+		chmod +rw $base$md5file
+		echo "[$0]: $md5file downloaded"
+	else
+		echo "[$0]: $md5file is not available from smb://$username@$ip/backups/"
+		echo "[$0]: assuming $file is also not available"
+		exit 0;
+	fi
 fi
 
 
 
 if [ -f $base$md5file ]; then
-	#echo "[$0] $md5file exists"
+	#echo "[$0]: $md5file exists"
 	if [ "`echo $md5old | cut -d' ' -f 1`"=="`cat $base$md5file | cut -d' ' -f 1`" ] && [ -f $base$file ]; then
-		echo "[$0] $file is already the most recent version"
+		echo "[$0]: $file is already the most recent version"
 	else
-		echo "[$0] the md5sum tells us there is a new version of $file"
+		echo "[$0]: the md5sum tells us there is a new version of $file"
 		start="`date +%S`"
 		smbget -o $base$file smb://$ip/backups/$file --username=$username --password=$password
 		chmod +rw $base$file
 		finish=`date +%S`
 		period=`echo "($finish-$start)+(23*60*60)" | bc`
-		echo "[$0] $file downloaded in `date +%Hh%Mm%Ss --date=@$period`"
+		echo "[$0]: $file downloaded in `date +%Hh%Mm%Ss --date=@$period`"
 	fi
 
 	str=`cd $base && md5sum -c $md5file > /dev/stdout`
-	#echo "[debug] $str | `echo $str | cut -d' ' -f 2`==OK"
-	##if [ `echo $str | cut -d' ' -f 2`=="OK" ]; then
 	if [ $? -eq 0 ]; then
-		echo "[$0] integrity of $file checked OK"
+		echo "[$0]: integrity of $file checked `echo $str | cut -d' ' -f 2`"
 		return 0
 	else
 		rm $base$file
 		rm $base$md5file
-		echo "[$0] integrity checks FAILED, deleted $file"
+		echo "[$0]: integrity checks FAILED, deleted $file"
 		return 1
 	fi
 fi
