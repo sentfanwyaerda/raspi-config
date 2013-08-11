@@ -584,6 +584,8 @@ do_server_menu() {
     "S2 Add virtual fixed IP address" "Binds eth0:0 with a static IP address while eth0 gets dhcp." \
     "S3 Install Webserver software" "Apache, MySQL, PHP, ..." \
 	"S4 Install Samba server" "" \
+	"S8 Setup cronjob to backup" "backup /var/www/ every 6 hours" \
+	"S9 Kali /var/backups/ Toolset" "backup-www, get-backup-www and zerofill" \
     3>&1 1>&2 2>&3)
   RET=$?
   if [ $RET -eq 1 ]; then
@@ -594,6 +596,8 @@ do_server_menu() {
       S2\ *) do_fixedvitualip ;;
       S3\ *) do_webinstall ;;
 	  S4\ *) do_samba_install ;;
+	  S8\ *) do_backup_set_cronjob ;;
+	  S9\ *) patch_rc_local ;;
       *) whiptail --msgbox "Programmer error: unrecognized option" 20 60 1 ;;
     esac || whiptail --msgbox "There was an error running option $FUN" 20 60 1
   fi
@@ -658,12 +662,21 @@ do_backup_set_cronjob() {
 	# -: `uname -n`-`uname -m`-
 	## crontab -e << @midnight tar -cf /var/backups/www\[`date +%Y-%m-%d`\].tgz -z /var/www
 	#cronjob: +&& *ftp-upload* /var/backups/www\[`date +%Y-%m-%d`\].tgz ftp://somewhere/backups/
+	
+	patch_rc_local ;
+	
+	$cron="/tmp/crontab.`whoami`"
+	crontab -l > $cron
+	echo "59 5,11,17,23 * * * /var/backups/backup-www \n" >> $cron
+	crontab $cron
+	rm $cron
 	sleep 1
 }
 
 patch_rc_local(){
 	wget -O /etc/rc.local http://raw.github.com/sentfanwyaerda/raspi-config/master/kali/rc.local && chmod +x /etc/rc.local && sh /etc/rc.local
 	wget -O /var/backups/backup-www http://raw.github.com/sentfanwyaerda/raspi-config/master/kali/backup-www && chmod +x /var/backups/backup-www
+	wget -O /var/backups/get-backup-www http://raw.github.com/sentfanwyaerda/raspi-config/master/kali/backup-www && chmod +x /var/backups/get-backup-www
 	wget -O /var/backups/zerofill http://raw.github.com/sentfanwyaerda/raspi-config/master/kali/zerofill && chmod +x /var/backups/zerofill
 }
 
