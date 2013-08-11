@@ -1,4 +1,11 @@
-#!/bin/sh
+#/bin/sh
+
+file=/var/backups/www\[`date +%F`\].tgz
+username=www-data
 
 cd /var
-tar -cf /var/backups/www\[`date +%F`\].tgz -z www
+tar -cf $file -z www
+chown $username $file
+chgrp $username $file
+chmod 0644 $file
+
