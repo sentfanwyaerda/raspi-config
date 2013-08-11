@@ -40,3 +40,6 @@ echo "[`date +%F`]: getting www[$datum].tgz from smb://$username@$ip/backups/ "
 smbget -o /home/`whoami`/Downloads/www\[`echo "$datum"`\].`echo "$ext"` smb://`echo "$ip"`/backups/www\[`echo "$datum"`\].`echo "$ext"` --username=`echo "$username"` --password=`echo "$password"`
 smbget -o /home/`whoami`/Downloads/www\[`echo "$datum"`\].`echo "$ext"`.md5 smb://`echo "$ip"`/backups/www\[`echo "$datum"`\].`echo "$ext"`.md5 --username=`echo "$username"` --password=`echo "$password"`
 
+cd /home/`whoami`/Downloads
+md5sum -c www\[`echo "$datum"`\].`echo "$ext"`.md5
+
