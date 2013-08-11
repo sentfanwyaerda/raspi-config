@@ -1,29 +1,49 @@
 #/bin/sh
 
-nowtoday=`date +%s`
-file=/var/backups/www\[`date +%F --date=@$nowtoday`\].tgz
+now=`date +%s`
+base=/var/backups/
+file=www\[`date +%F --date=@$now`\].tgz
 username=www-data
 
+echo "[backup-www] Creating: $file in $base"
+
 cd /var
-tar -cf $file -z www
-chown $username $file
-chgrp $username $file
-chmod 0644 $file
+start=`date +%s`
+tar -cf $base$file -z www
+finish=`date +%s`
+backuptime=`echo "($finish - $start) + (23*60*60)" | bc`
+echo "[backup-www] $file took `date +%Hh%Mm%Ss --date=@$backuptime`"
+chown $username $base$file
+chgrp $username $base$file
+chmod 0644 $base$file
 
-md5sum $file > $file.md5
-chown $username $file.md5
-chgrp $username $file.md5
-chmod 0644 $file.md5
+echo "[backup-www] Generating MD5sum."
 
-yesterday=`echo "$nowtoday - 86400" | bc`
-prevfile=/var/backups/www\[`date +%F --date=@$yesterday`\].tgz
+cd $base
+md5sum $file > $base$file.md5
+chown $username $base$file.md5
+chgrp $username $base$file.md5
+chmod 0644 $base$file.md5
 
-if [ -f $prevfile.md5 ]; then
-	if diff <(cat $prevfile.md5 | cut -d" " -f 1) <(cat $file.md5 | cut -d" " -f 1) >/dev/null ; then
-		echo "[backup-www] /var/www/ has been altered since yesterdays backup and $file has the most recent backup."
+cat $base$file.md5
+
+yesterday=`echo "$now -86400" | bc`
+prevfile=www\[`date +%F --date=@$yesterday`\].tgz
+
+echo "[backup-www] Comparing $file with yesterdays $prevfile through md5sums."
+
+if [ -f $base$prevfile.md5 ]; then
+	#echo "[backup-www] $base$prevfile.md5 found."
+	#cat $base$prevfile.md5
+	#cat $base$file.md5
+	#echo "`cat $base$prevfile.md5 | cut -d' ' -f 1` == `cat $base$file.md5 | cut -d' ' -f 1`"
+
+	if [ ! "`cat $base$prevfile.md5 | cut -d' ' -f 1`"=="`cat $base$file.md5 | cut -d' ' -f 1`" ]; then
+		echo "[backup-www] Since yesterdays backup ($prevfile) there were no alterations in /var/www ."
+		rm $base$file
+		rm $base$file.md5
+		echo "[backup-www] Current $file backup has been purged."
 	else
-		echo "[backup-www] Since yesterdays backup ($prevfile) there were no alterations in /var/www "
-		rm $file
-		rm $file.md5
+		echo "[backup-www] /var/www/ has been altered since yesterdays backup and $file has the most recent backup."
 	fi
 fi
