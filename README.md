@@ -3,10 +3,10 @@
 - more information on [elinux.org](http://elinux.org/RPi_raspi-config)
 
 ####add-on
-*Adding some more voodoo to my RaspberryPi* and being able to do a complete rebuild after datacorruption of the SD-card.
+*Adding some more voodoo to my RaspberryPi* and being able to do a quick complete rebuild after datacorruption of the SD-card, or switch of distribution.
 - Hexxeh's [rpi-update](https://github.com/Hexxeh/rpi-update) -- firmware update method
 - **[EXPERIMENTAL]** shrink rootfs -- To [shrink](http://www.howtoforge.com/linux_resizing_ext3_partitions) the SD-card to a bare minimum before backuping through *dd* or *Win32DiskImager*
-	- Use ``zerofill`` instead. It fills the sd-card with a single file of zero's (which will be automatically deleted through the ``rc.local``-patch). On your desktop with cardreader: ``dd if=$sdcard | gzip > rpi-$(date +%F).gz`` or restore with: ``gzip -dc rpi-$(date +%F).gz | dd of=$sdcard``
+	- Use ``zerofill`` instead. It fills the sd-card with a single file of zero's (which will be automatically deleted through the ``rc.local``-patch). On your desktop with cardreader (``sdcard=/dev/sdb && ``): ``dd if=$sdcard | gzip > rpi-$(date +%F).gz`` and restore with: ``gzip -dc rpi-$(date +%F).gz | dd of=$sdcard``
 - system upgrade -- updates and upgrades all installed programms
 - raspi-config can update (back to) the originial *or* update this altered forked version
 - semi-automated webserver configuration:
@@ -16,6 +16,7 @@
 	- ~~restore /var/www from a backup~~
 	- setup backup method ``backup-www`` (cronjob /var/www to /var/backups/*.gz, ``get-backup-www`` gets it from smb://$ip/backups/)
 	- patch apache to use *.conf in /var/www/domains/httpd.conf/
+	- patch samba to enable smb://$ip/www/ *(rw)* and smb://$ip/backups/ *(r)*
 
 ####Tested with:
 - Raspbian
