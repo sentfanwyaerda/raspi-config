@@ -26,4 +26,5 @@
 *(if not already available through the RaspberryPi flavoured Linux distrubution you use)*
 ``` wget -O /sbin/raspi-config http://raw.github.com/sentfanwyaerda/raspi-config/master/raspi-config && chmod +x /sbin/raspi-config ```
 
-In case your onboard clock of the RaspberryPi says it's 1970 (when you use ``date`` ): ``apt-get install ntp fake-hwclock``.
+- In case your onboard clock of the RaspberryPi says it's 1970 (when you use ``date`` ): ``apt-get install ntp fake-hwclock && ntpdate -q ntp.ubuntu.com``.
+- In case you run into dependency errors: ``apt-get install ntp fake-hwclock bc git-core`` and ``update-rc.d cron enable``
