@@ -4,11 +4,17 @@ if [ -n "$2" ]; then
 else
 	file="/var/zero.txt"
 fi
+if [ -n "$3" ]; then
+	dev=$3
+else
+	dev="/dev/zero"
+fi
 start=`date +%s`
 if [ -n "$1" ]; then
-	dd if=/dev/zero of=$file bs=1 count=0 seek=$1
+	#dd if=$dev of=$file bs=1 count=1 seek=$1
+	dd if=$dev of=$file count=$1
 else
-	dd if=/dev/zero of=$file
+	dd if=$dev of=$file
 fi
 finish=`date +%s`
 length=`echo "($finish - $start) + (23*60*60)" | bc`
@@ -19,6 +25,6 @@ chgrp www-data $file
 
 echo "[zerofill]: executed $file in `date +%Hh%Mm%Ss --date=@$length` to `ls $file -lh | cut -d' ' -f 5`"
 
-if [[ ! -n "$1" ]] ; then
+if [ ! -n "$1" ]; then
 	halt
 fi
