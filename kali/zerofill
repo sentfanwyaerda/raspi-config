@@ -12,7 +12,7 @@ fi
 start=`date +%s`
 if [ -n "$1" ]; then
 	#dd if=$dev of=$file bs=1 count=1 seek=$1
-	dd if=$dev of=$file count=$1
+	dd if=$dev of=$file count=$1 bs=1 seek=1
 else
 	dd if=$dev of=$file
 fi
