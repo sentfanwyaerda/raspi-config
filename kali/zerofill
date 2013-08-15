@@ -1,10 +1,14 @@
 #!/bin/sh
-file="/var/zero.txt"
-start=`date +%s`
-if [[ -n "$1" ]] ; then
-	time dd if=/dev/zero of=$file bs=1 count=0 seek=$1
+if [ -n "$2" ]; then
+	file=$2
 else
-	time dd if=/dev/zero of=$file
+	file="/var/zero.txt"
+fi
+start=`date +%s`
+if [ -n "$1" ]; then
+	dd if=/dev/zero of=$file bs=1 count=0 seek=$1
+else
+	dd if=/dev/zero of=$file
 fi
 finish=`date +%s`
 length=`echo "($finish - $start) + (23*60*60)" | bc`
@@ -13,7 +17,7 @@ chmod 0777 $file
 chown www-data $file
 chgrp www-data $file
 
-echo "[zerofill]: executed in `date +%Hh%Mm%Ss --date=@$length`"
+echo "[zerofill]: executed $file in `date +%Hh%Mm%Ss --date=@$length` to `ls $file -lh | cut -d' ' -f 5`"
 
 if [[ ! -n "$1" ]] ; then
 	halt
