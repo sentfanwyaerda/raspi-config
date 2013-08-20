@@ -13,8 +13,9 @@
 
 service ntp restart
 
+# Setting secondairy static IP address to eth0:0
 #ipdown eth0
-#ifup etho0
+#ifup eth0
 
 if [ -n "$1" ] ; then
 	ip="$1"
@@ -29,17 +30,31 @@ fi
 ifconfig $dev $ip
 route add -host $ip dev $dev
 
+# Setting up Wireless Lan:
+wlan = 'wlan0'
+network = ''
+if [ -z $network ] && [ -z `ifconfig | grep -i $wlan`] && [ -z `iwlist $wlan scan | grep -i $network`]; then
+	ifconfig $wlan down
+	dhclient -r $wlan
+	ifconfig $wlan up
+	iwconfig $wlan essid "$network"
+	iwconfig $wlan mode Managed
+	dhclient $wlan
+fi
 
+# Restart Webservices
 /etc/init.d/apache2 restart
 #service apache restart
 #service mysql restart
 
 service samba restart
 
+# Removing the buffer file (optionally) created with zerofill
 if [ -f /var/zero.txt ] ; then
 	rm /var/zero.txt
 fi
 
+# Enforce fsck on each boot
 touch /forcefsck
 
 exit 0

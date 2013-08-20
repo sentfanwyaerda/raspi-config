@@ -585,7 +585,7 @@ do_server_menu() {
     "S3 Install Webserver software" "Apache, MySQL, PHP, ..." \
 	"S4 Install Samba server" "" \
 	"S8 Setup cronjob to backup" "backup /var/www/ every 6 hours" \
-	"S9 Kali /var/backups/ Toolset" "backup-www, get-backup-www and zerofill" \
+	"S9 Install raspi-config++ Toolset" "backup-www, get-backup-www, zerofill and several rootfs tools" \
     3>&1 1>&2 2>&3)
   RET=$?
   if [ $RET -eq 1 ]; then
@@ -648,9 +648,9 @@ do_samba_install() {
   
   chmod 0777 /var/www -R && chown www-data /var/www -R && chgrp www-data /var/www -R
   
-  echo "[www]\n\tcomment = Webroot\n\tpath = /var/www\n\tcreate mask = 0777\n\tdirectory mask = 0777\n\tforce create mode = 0777\n\tforce directory mode = 0777\n\twriteable = yes\n\tguest ok = yes\n\tread only = no\n\tbrowseable = yes\n\tlocking = no\n\tforce user = www-data\n\tforce group = www-data\n\twrite list = pi, kali, @www-data\n\tinherit permissions = yes\n\n" >> /etc/samba/smb.conf
+  echo "[www]\n\tcomment = Webroot\n\tpath = /var/www\n\tcreate mask = 0777\n\tdirectory mask = 0777\n\tforce create mode = 0777\n\tforce directory mode = 0777\n\twriteable = yes\n\tguest ok = yes\n\tread only = no\n\tbrowseable = yes\n\tlocking = no\n\tforce user = www-data\n\tforce group = www-data\n\twrite list = pi, @www-data\n\tinherit permissions = yes\n\n" >> /etc/samba/smb.conf
   
-  echo "[backups]\n\tcomment = backups\n\tpath = /var/backups\n\tcreate mask = 0644\n\tdirectory mask = 0644\n\tforce create mode = 0644\n\tforce directory mode = 0644\n\twriteable = no\n\tguest ok = yes\n\tread only = yes\n\tbrowseable = yes\n\tlocking = no\n\tforce user = www-data\n\tforce group = www-data\n\twrite list = pi, kali, @www-data\n\tinherit permissions = yes\n\n" >> /etc/samba/smb.conf
+  echo "[backups]\n\tcomment = backups\n\tpath = /var/backups\n\tcreate mask = 0644\n\tdirectory mask = 0644\n\tforce create mode = 0644\n\tforce directory mode = 0644\n\twriteable = no\n\tguest ok = yes\n\tread only = yes\n\tbrowseable = yes\n\tlocking = no\n\tforce user = www-data\n\tforce group = www-data\n\twrite list = pi, @www-data\n\tinherit permissions = yes\n\n" >> /etc/samba/smb.conf
   
   patch_rc_local ;
 }
@@ -674,10 +674,54 @@ do_backup_set_cronjob() {
 }
 
 patch_rc_local(){
-	wget -O /etc/rc.local http://raw.github.com/sentfanwyaerda/raspi-config/master/kali/rc.local && chmod +x /etc/rc.local && sh /etc/rc.local
-	wget -O /var/backups/backup-www http://raw.github.com/sentfanwyaerda/raspi-config/master/kali/backup-www && chmod +x /var/backups/backup-www
-	wget -O /var/backups/get-backup-www http://raw.github.com/sentfanwyaerda/raspi-config/master/kali/backup-www && chmod +x /var/backups/get-backup-www
-	wget -O /var/backups/zerofill http://raw.github.com/sentfanwyaerda/raspi-config/master/kali/zerofill && chmod +x /var/backups/zerofill
+  whiptail --yesno "Update /etc/rc.local?" 8 40 2 \
+    --yes-button No --no-button "Update"
+  RET=$?
+  if [ $RET -eq 1 ]; then
+	wget -O /etc/rc.local http://raw.github.com/sentfanwyaerda/raspi-config/master/toolset/rc.local && chmod +x /etc/rc.local && sh /etc/rc.local
+  fi
+  whiptail --yesno "Update /var/backups/backup-www?" 8 40 2 \
+    --yes-button No --no-button "Update"
+  RET=$?
+  if [ $RET -eq 1 ]; then
+	wget -O /var/backups/backup-www http://raw.github.com/sentfanwyaerda/raspi-config/master/toolset/backup-www && chmod +x /var/backups/backup-www
+  fi
+  whiptail --yesno "Update /var/backups/get-backup-www?" 8 40 2 \
+    --yes-button No --no-button "Update"
+  RET=$?
+  if [ $RET -eq 1 ]; then
+	wget -O /var/backups/get-backup-www http://raw.github.com/sentfanwyaerda/raspi-config/master/toolset/backup-www && chmod +x /var/backups/get-backup-www
+  fi
+  whiptail --yesno "Update /var/backups/zerofill?" 8 40 2 \
+    --yes-button No --no-button "Update"
+  RET=$?
+  if [ $RET -eq 1 ]; then
+	wget -O /var/backups/zerofill http://raw.github.com/sentfanwyaerda/raspi-config/master/toolset/zerofill && chmod +x /var/backups/zerofill
+  fi
+  whiptail --yesno "Update /sbin/lnmv?" 8 40 2 \
+    --yes-button No --no-button "Update"
+  RET=$?
+  if [ $RET -eq 1 ]; then
+	wget -O /sbin/lnmv http://raw.github.com/sentfanwyaerda/raspi-config/master/toolset/lnmv && chmod +x /sbin/lnmv
+  fi
+  whiptail --yesno "Update /var/backups/backup-rootfs?" 8 40 2 \
+    --yes-button No --no-button "Update"
+  RET=$?
+  if [ $RET -eq 1 ]; then
+	wget -O /var/backups/backup-rootfs http://raw.github.com/sentfanwyaerda/raspi-config/master/toolset/backup-rootfs && chmod +x /var/backups/backup-rootfs
+  fi
+  whiptail --yesno "Update /var/backups/freeze-rootfs?" 8 40 2 \
+    --yes-button No --no-button "Update"
+  RET=$?
+  if [ $RET -eq 1 ]; then
+	wget -O /var/backups/freeze-rootfs http://raw.github.com/sentfanwyaerda/raspi-config/master/toolset/freeze-rootfs && chmod +x /var/backups/freeze-rootfs
+  fi
+  whiptail --yesno "Update /var/backups/unfreeze-rootfs?" 8 40 2 \
+    --yes-button No --no-button "Update"
+  RET=$?
+  if [ $RET -eq 1 ]; then
+	wget -O /var/backups/unfreeze-rootfs http://raw.github.com/sentfanwyaerda/raspi-config/master/toolset/unfreeze-rootfs && chmod +x /var/backups/unfreeze-rootfs
+  fi
 }
 
 

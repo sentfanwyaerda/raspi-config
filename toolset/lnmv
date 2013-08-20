@@ -1,0 +1,14 @@
+#!/bin/sh
+if [ -f $1 ] && [ ! -h $1 ]; then
+	if [ ! -z $3 ]; then
+		sym=$3;
+	else
+		sym='-s';
+	fi
+	mv $1 $2
+	ln $sym $2 $1
+	return 1;
+else
+	echo "[$0] $1 does not exist as a file, so can't move the file and make a symlink to $2";
+	return 0;
+fi
