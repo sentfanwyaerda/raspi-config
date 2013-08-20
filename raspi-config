@@ -95,15 +95,20 @@ $PART_START
 12582912
 p
 n
-p
+e
 3
+
+
+n
+l
 
 
 p
 w
 EOF
-		# add /home (/dev/mmcblk0p3) to /etc/fstab and format
-		echo "/dev/mmcblk0p3 /home ext4 defaults,errors=remount-ro 0 1" >> /etc/fstab
+		# add /home (/dev/mmcblk0p5) to /etc/fstab and format
+		echo "/dev/mmcblk0p5 /home ext4 defaults,errors=remount-ro 0 1" >> /etc/fstab
+		# the RPi wishes to reboot before:
 		mkfs --type=ext4 /dev/mmcblk0p5
   ASK_TO_REBOOT=1
 		
@@ -723,7 +728,7 @@ patch_rc_local(){
     --yes-button No --no-button "Update"
   RET=$?
   if [ $RET -eq 1 ]; then
-	wget -O /var/backups/get-backup-www http://raw.github.com/sentfanwyaerda/raspi-config/master/toolset/backup-www && chmod +x /var/backups/get-backup-www
+	wget -O /var/backups/get-backup-www http://raw.github.com/sentfanwyaerda/raspi-config/master/toolset/get-backup-www && chmod +x /var/backups/get-backup-www
   fi
   whiptail --yesno "Update /var/backups/zerofill?" 8 40 2 \
     --yes-button No --no-button "Update"
