@@ -63,6 +63,11 @@ do_expand_rootfs() {
   [ "$PART_START" ] || return 1
   # Return value will likely be error for fdisk as it fails to reload the
   # partition table because the root fs is mounted
+  
+	  whiptail --yesno "Which kind of filesystem do you want?" 8 40 2 \
+		--yes-button "READ ONLY" --no-button "Normal"
+	  RET=$?
+	  if [ $RET -eq 1 ]; then
   fdisk /dev/mmcblk0 <<EOF
 p
 d
@@ -76,6 +81,33 @@ p
 w
 EOF
   ASK_TO_REBOOT=1
+
+		else ##Setting up an READ ONLY /dev/root (6Gb = 6*1024*1024*1024 / 512 = 12582912s) and extended logic partition for /home
+		
+  fdisk /dev/mmcblk0 <<EOF
+p
+d
+2
+n
+p
+2
+$PART_START
+12582912
+p
+n
+p
+3
+
+
+p
+w
+EOF
+		# add /home (/dev/mmcblk0p3) to /etc/fstab and format
+		echo "/dev/mmcblk0p3 /home ext4 defaults,errors=remount-ro 0 1" >> /etc/fstab
+		mkfs --type=ext4 /dev/mmcblk0p5
+  ASK_TO_REBOOT=1
+		
+		fi
 
   # now set up an init.d script
 cat <<\EOF > /etc/init.d/resize2fs_once &&
@@ -106,6 +138,7 @@ case "$1" in
     ;;
 esac
 EOF
+
   chmod +x /etc/init.d/resize2fs_once &&
   update-rc.d resize2fs_once defaults &&
   if [ "$INTERACTIVE" = True ]; then
