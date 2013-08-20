@@ -774,6 +774,7 @@ do_additional_menu() {
     "4 Upgrade all installed programs" ".." \
 	"5 Refresh Network Connections" "" \
 	"6 Configure as webserver >" ".." \
+	"7 Install GPIO Connector" ".." \
     "x Shrink root partition (experimental)" ".." \
     3>&1 1>&2 2>&3)
   RET=$?
@@ -788,6 +789,7 @@ do_additional_menu() {
       4\ *) do_system_upgrade ;;
 	  5\ *) do_network_refesh ;;
       6\ *) do_server_menu ;;
+	  7\ *) do_gpio_install ;;
       x\ *) do_shrink_rootfs ;;
       *) whiptail --msgbox "Programmer error: unrecognized option" 20 60 1 ;;
     esac || whiptail --msgbox "There was an error running option $FUN" 20 60 1
@@ -826,6 +828,14 @@ do_network_refesh() {
 	ifdown eth0 && ifup eth0
 }
 
+do_gpio_install(){
+	# more info: http://learn.adafruit.com/adafruits-raspberry-pi-lesson-4-gpio-setup/test-and-configure
+	mkdir /home/`whoami`/adafruit && git clone http://github.com/adafruit/Adafruit-Raspberry-Pi-Python-Code.git /home/`whoami`/adafruit/RPi-py
+	sudo apt-get install python-dev python-rpi.gpio python-smbus i2c-tools
+	echo "i2c-bcm2708\ni2c-dev" >> /etc/modules
+	echo "#backlist spi-bcm2708\n#blacklist i2c-bcm2708" > /etc/modprobe.d/raspi-blacklist.conf
+	i2cdetect -y 1
+}
 
 do_shrink_rootfs() {
   whiptail --yesno "Would you like to install BC?\n\
