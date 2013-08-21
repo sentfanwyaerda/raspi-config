@@ -1,14 +1,44 @@
 #!/bin/sh
-if [ -f $1 ] && [ ! -h $1 ]; then
-	if [ ! -z $3 ]; then
+force="no" #no|yes
+run="real" #test|real
+if [ -d $1 ]; then
+	echo "[$0] $1 is a directory";
+	if [ ! -z $3]; then
 		sym=$3;
 	else
-		sym='-s';
+		sym='-s -d';
 	fi
-	mv $1 $2
-	ln $sym $2 $1
-	return 1;
-else
-	echo "[$0] $1 does not exist as a file, so can't move the file and make a symlink to $2";
-	return 0;
+else 
+	if [ -f $1 ] && [ ! -h $1 ]; then
+		echo "[$0] $1 is an existing file";
+		if [ ! -z $3 ]; then
+			sym=$3;
+		else
+			sym='-s';
+		fi
+	else
+		echo "[$0] $1 does not exist as a file, so can't move the file and make a symlink to $2 [aborting]";
+		return 0; exit;
+	fi
 fi
+#24
+if [ -f $2 ] || [ -d $2 ]; then
+	if [ $force == "yes" ]; then
+		echo "[$0] removing $2 [forced action]";
+		if [ $run != "test"]; then
+			rm $2 -R;
+		fi
+	else
+		echo "[$0] $2 already exists [aborting]";
+		return 0; exit;
+	fi
+fi
+echo "[$0] move $1 to $2";
+if [ $run != "test" ]; then
+	mv $1 $2
+fi
+echo "[$0] create symbolic link ($sym) from $2 back to $1";
+if [ $run != "test" ]; then
+	ln $sym $2 $1
+fi
+return 1;
