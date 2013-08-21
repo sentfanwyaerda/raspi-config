@@ -25,7 +25,7 @@ fi
 if [ -f $2 ] || [ -d $2 ]; then
 	if [ $force == "yes" ]; then
 		echo "[$0] removing $2 [forced action]";
-		if [ $run != "test"]; then
+		if [ $run != "test" ]; then
 			rm $2 -R;
 		fi
 	else
