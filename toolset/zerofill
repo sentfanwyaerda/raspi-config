@@ -2,7 +2,7 @@
 if [ -n "$2" ]; then
 	file=$2
 else
-	file="/var/zero.txt"
+	file="/var/zero.blob"
 fi
 if [ -n "$3" ]; then
 	dev=$3

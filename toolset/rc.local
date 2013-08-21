@@ -50,8 +50,8 @@ fi
 service samba restart
 
 # Removing the buffer file (optionally) created with zerofill
-if [ -f /var/zero.txt ] ; then
-	rm /var/zero.txt
+if [ -f /var/zero.blob ] ; then
+	rm /var/zero.blob
 fi
 
 # Enforce fsck on each boot

@@ -1,1 +1,16 @@
 #!/bin/sh
+/etc/init.d/autofs stop
+/etc/init.d/haldaemon stop
+rootfs="mmcblk0p2"
+mount -o rw,remount /dev/$rootfs
+echo "[$0] filling /dev/$rootfs to the max with /var/zero.blob"
+./zerofill `df | grep "/$" | sed 's/ \+/\t/g' | cut -f4`K
+#mount - ro,remount /dev/$rootfs
+echo "[$0] unmounting /dev/$rootfs to create backup /home/backups/`uname -n`-rootfs-$rootfs\[`date +%F`\].img.gz"
+umount /dev/$rootfs
+dd if=/dev/$rootfs | gzip > /home/backups/`uname -n`-rootfs-$rootfs\[`date +%F`\].img.gz
+
+mount - ro,remount /dev/$rootfs
+/etc/init.d/autofs start
+/etc/init.d/haldaemon start
+
