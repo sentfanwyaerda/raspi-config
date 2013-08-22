@@ -15,31 +15,32 @@
 if [ -f /var/zero.blob ]; then
         mount -o rw,remount /
         rm /var/zero.blob
-        mount -o ro,remount /                                                                                    
-fi                                                                                                               
-if [ -f /home/zero.blob ]; then                                                                                  
-        # /home is already rw                                                                                    
-        rm /home/zero.blob                                                                                       
-fi                                                                                                               
-if [ -f /boot/zero.blob ]; then                                                                                  
-        mount -o rw,remount /boot                                                                                
-        rm /boot/zero.blob                                                                                       
-        mount -o ro,remount /boot                                                                                
-fi                                                                                                               
+        mount -o ro,remount /
+fi
+if [ -f /home/zero.blob ]; then
+        # /home is already rw
+        rm /home/zero.blob
+fi
+if [ -f /boot/zero.blob ]; then
+        mount -o rw,remount /boot
+        rm /boot/zero.blob
+        mount -o ro,remount /boot
+fi
 
-if [ ! -f /forcefsck ]; then                                                                                     
-        mount -o rw,remount /                                                                                    
-        touch /forcefsck                                                                                         
-        mount -o ro,remount /                                                                                    
-fi                                                                                                               
+if [ ! -f /forcefsck ]; then
+        mount -o rw,remount /
+        touch /forcefsck
+        mount -o ro,remount /
+fi
 
 if [ -f /boot/config.txt ]; then
 	. /boot/config.txt
 	working_memkb=`cat /proc/meminfo | grep "MemTotal" | sed 's/ \+/\t/g' | cut -f2`;
-	working_mem=`echo "$working_memkb / 1024" | bc`
+	working_mem=`echo "( $working_memkb -256) / 1000" | bc`
 	IP=`ifconfig | grep "Bcast" | sed 's/ \+/\t/g' | cut -f3 | cut -d: -f2`
 
 	echo "`uname -n` ($IP) is running at $arm_freq MHz ($core_freq MHz core) and $working_mem/$gpu_mem Mb split @$sdram_freq MHz with +$over_voltage V"
+
 fi
 
 exit 0
