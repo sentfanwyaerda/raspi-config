@@ -23,7 +23,7 @@ else
 fi
 #24
 if [ -f $2 ] || [ -d $2 ]; then
-	if [ $force == "yes" ]; then
+	if [ ! "$force" != "yes" ]; then #"$force" is quoted due to 'no' being a forbidden word.
 		echo "[$0] removing $2 [forced action]";
 		if [ $run != "test" ]; then
 			rm $2 -R;

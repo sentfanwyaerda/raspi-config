@@ -2,22 +2,32 @@
 
 now=`date +%s`
 base=/var/backups/
-file=www\[`date +%F --date=@$now`\].tgz
+# file=www\[`date +%F --date=@$now`\].tgz
 username=www-data
+if [ -n "$1" ]; then
+	location=$1
+else
+	location=/var/www
+fi
 
-echo "[backup-www] Creating: $file in $base"
+lbase=${location##*[/|\\]}
+ldir="$location/../"
 
-cd /var
+file="$lbase[`date +%F --date=@$now`].tgz"
+
+echo "[backup-$lbase] Creating: $file in $base"
+
+cd $ldir
 start=`date +%s`
-tar -cf $base$file -z www
+tar -cf $base$file -z $lbase
 finish=`date +%s`
 backuptime=`echo "($finish - $start) + (23*60*60)" | bc`
-echo "[backup-www] $file took `date +%Hh%Mm%Ss --date=@$backuptime`"
+echo "[backup-$lbase] $file took `date +%Hh%Mm%Ss --date=@$backuptime`"
 chown $username $base$file
 chgrp $username $base$file
 chmod 0644 $base$file
 
-echo "[backup-www] Generating MD5sum."
+echo "[backup-$lbase] Generating MD5sum."
 
 cd $base
 md5sum $file > $base$file.md5
@@ -28,9 +38,9 @@ chmod 0644 $base$file.md5
 cat $base$file.md5
 
 yesterday=`echo "$now -86400" | bc`
-prevfile=www\[`date +%F --date=@$yesterday`\].tgz
+prevfile="$lbase[`date +%F --date=@$yesterday`\].tgz
 
-echo "[backup-www] Comparing $file with yesterdays $prevfile through md5sums."
+echo "[backup-$lbase] Comparing $file with yesterdays $prevfile through md5sums."
 
 if [ -f $base$prevfile.md5 ]; then
 	#echo "[backup-www] $base$prevfile.md5 found."
@@ -39,11 +49,11 @@ if [ -f $base$prevfile.md5 ]; then
 	#echo "`cat $base$prevfile.md5 | cut -d' ' -f 1` == `cat $base$file.md5 | cut -d' ' -f 1`"
 
 	if [ ! "`cat $base$prevfile.md5 | cut -d' ' -f 1`"=="`cat $base$file.md5 | cut -d' ' -f 1`" ]; then
-		echo "[backup-www] Since yesterdays backup ($prevfile) there were no alterations in /var/www ."
+		echo "[backup-$lbase] Since yesterdays backup ($prevfile) there were no alterations in $location ."
 		rm $base$file
 		rm $base$file.md5
-		echo "[backup-www] Current $file backup has been purged."
+		echo "[backup-$lbase] Current $file backup has been purged."
 	else
-		echo "[backup-www] /var/www/ has been altered since yesterdays backup and $file has the most recent backup."
+		echo "[backup-$lbase] $location has been altered since yesterdays backup and $file has the most recent backup."
 	fi
 fi
