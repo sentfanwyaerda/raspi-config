@@ -48,8 +48,8 @@ if [ -f $base$prevfile.md5 ]; then
 	#cat $base$file.md5
 	#echo "`cat $base$prevfile.md5 | cut -d' ' -f 1` == `cat $base$file.md5 | cut -d' ' -f 1`"
 
-	if [ ! "`cat $base$prevfile.md5 | cut -d' ' -f 1`"=="`cat $base$file.md5 | cut -d' ' -f 1`" ]; then
-		echo "[backup-$lbase] Since yesterdays backup ($prevfile) there were no alterations in $location ."
+	if [ "`cat $base$prevfile.md5 | cut -d' ' -f 1`"!="`cat $base$file.md5 | cut -d' ' -f 1`" ]; then
+		echo "[backup-$lbase] Since yesterdays backup ( $prevfile ) there were no alterations in $location ."
 		rm $base$file
 		rm $base$file.md5
 		echo "[backup-$lbase] Current $file backup has been purged."
