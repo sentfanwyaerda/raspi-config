@@ -1,0 +1,18 @@
+# UNCONFIGURED FSTAB FOR BASE SYSTEM
+# <file system>	<mount>	<type>	<options>	<dump>	<pass>
+
+/dev/mmcblk0p5 /home ext4 defaults,errors=remount-ro 0 1
+
+/dev/mmcblk0p1 /boot 	vfat	ro,noatime,errors=remount-ro	0 0
+/dev/mmcblk0p2 /	ext4	ro,noatime,errors=remount-ro	0 0
+
+proc	/proc		proc	defaults	0 0
+#none	/var/run	ramfs	size=12M	0 0
+
+tmpfs	/var/run	tmpfs	nodev,nosuid,size=12M	0 0
+
+tmpfs	/var/log	tmpfs	nodev,nosuid,size=16M	0 0
+
+tmpfs	/etc/samba	tmpfs	nodev,nosuid,size=128k	0 0
+tmpfs	/var/lib/sudo	tmpfs	nodev,nosuid,size=64k,mode=0700	0 0
+#umask=077

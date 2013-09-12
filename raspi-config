@@ -831,7 +831,8 @@ do_network_refesh() {
 do_gpio_install(){
 	# more info: http://learn.adafruit.com/adafruits-raspberry-pi-lesson-4-gpio-setup/test-and-configure
 	mkdir /home/`whoami`/adafruit && git clone http://github.com/adafruit/Adafruit-Raspberry-Pi-Python-Code.git /home/`whoami`/adafruit/RPi-py
-	sudo apt-get install python-dev python-rpi.gpio python-smbus i2c-tools
+	sudo apt-get install python-dev python-smbus i2c-tools python-setuptools && sudo easy_install rpi.gpio
+	#sudo apt-get install python-rpi.gpio
 	echo "i2c-bcm2708\ni2c-dev" >> /etc/modules
 	echo "#backlist spi-bcm2708\n#blacklist i2c-bcm2708" > /etc/modprobe.d/raspi-blacklist.conf
 	i2cdetect -y 1
