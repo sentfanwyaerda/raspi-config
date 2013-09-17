@@ -33,28 +33,28 @@ you have heavily customised your installation.\
 
 do_expand_rootfs() {
   if ! [ -h /dev/root ]; then
-    whiptail --msgbox "/dev/root does not exist or is not a symlink. Don't know how to expand" 20 60 2
+whiptail --msgbox "/dev/root does not exist or is not a symlink. Don't know how to expand" 20 60 2
     return 0
   fi
 
-  ROOT_PART=$(readlink /dev/root)
+ROOT_PART=$(readlink /dev/root)
   PART_NUM=${ROOT_PART#mmcblk0p}
   if [ "$PART_NUM" = "$ROOT_PART" ]; then
-    whiptail --msgbox "/dev/root is not an SD card. Don't know how to expand" 20 60 2
+whiptail --msgbox "/dev/root is not an SD card. Don't know how to expand" 20 60 2
     return 0
   fi
 
-  # NOTE: the NOOBS partition layout confuses parted. For now, let's only 
+  # NOTE: the NOOBS partition layout confuses parted. For now, let's only
   # agree to work with a sufficiently simple partition layout
   if [ "$PART_NUM" -ne 2 ]; then
-    whiptail --msgbox "Your partition layout is not currently supported by this tool. You are probably using NOOBS, in which case your root filesystem is already expanded anyway." 20 60 2
+whiptail --msgbox "Your partition layout is not currently supported by this tool. You are probably using NOOBS, in which case your root filesystem is already expanded anyway." 20 60 2
     return 0
   fi
 
-  LAST_PART_NUM=$(parted /dev/mmcblk0 -ms unit s p | tail -n 1 | cut -f 1 -d:)
+LAST_PART_NUM=$(parted /dev/mmcblk0 -ms unit s p | tail -n 1 | cut -f 1 -d:)
 
   if [ "$LAST_PART_NUM" != "$PART_NUM" ]; then
-    whiptail --msgbox "/dev/root is not the last partition. Don't know how to expand" 20 60 2
+whiptail --msgbox "/dev/root is not the last partition. Don't know how to expand" 20 60 2
     return 0
   fi
 
@@ -63,11 +63,6 @@ do_expand_rootfs() {
   [ "$PART_START" ] || return 1
   # Return value will likely be error for fdisk as it fails to reload the
   # partition table because the root fs is mounted
-  
-	  whiptail --yesno "Which kind of filesystem do you want?" 8 40 2 \
-		--yes-button "READ ONLY" --no-button "Normal"
-	  RET=$?
-	  if [ $RET -eq 1 ]; then
   fdisk /dev/mmcblk0 <<EOF
 p
 d
@@ -81,44 +76,12 @@ p
 w
 EOF
   ASK_TO_REBOOT=1
-
-		else ##Setting up an READ ONLY /dev/root (6Gb = 6*1024*1024*1024 / 512 = 12582912s) and extended logic partition for /home
-		
-  fdisk /dev/mmcblk0 <<EOF
-p
-d
-2
-n
-p
-2
-$PART_START
-12582912
-p
-n
-e
-3
-
-
-n
-l
-
-
-p
-w
-EOF
-		# add /home (/dev/mmcblk0p5) to /etc/fstab and format
-		echo "/dev/mmcblk0p5 /home ext4 defaults,errors=remount-ro 0 1" >> /etc/fstab
-		# the RPi wishes to reboot before:
-		mkfs --type=ext4 /dev/mmcblk0p5
-  ASK_TO_REBOOT=1
-		
-		fi
 
   # now set up an init.d script
 cat <<\EOF > /etc/init.d/resize2fs_once &&
 #!/bin/sh
 ### BEGIN INIT INFO
-# Provides:          resize2fs_once
+# Provides: resize2fs_once
 # Required-Start:
 # Required-Stop:
 # Default-Start: 2 3 4 5 S
@@ -130,24 +93,23 @@ cat <<\EOF > /etc/init.d/resize2fs_once &&
 . /lib/lsb/init-functions
 
 case "$1" in
-  start)
-    log_daemon_msg "Starting resize2fs_once" &&
-    resize2fs /dev/root &&
-    rm /etc/init.d/resize2fs_once &&
-    update-rc.d resize2fs_once remove &&
-    log_end_msg $?
-    ;;
-  *)
-    echo "Usage: $0 start" >&2
-    exit 3
-    ;;
+start)
+log_daemon_msg "Starting resize2fs_once" &&
+resize2fs /dev/root &&
+rm /etc/init.d/resize2fs_once &&
+update-rc.d resize2fs_once remove &&
+log_end_msg $?
+;;
+*)
+echo "Usage: $0 start" >&2
+exit 3
+;;
 esac
 EOF
-
   chmod +x /etc/init.d/resize2fs_once &&
   update-rc.d resize2fs_once defaults &&
   if [ "$INTERACTIVE" = True ]; then
-    whiptail --msgbox "Root partition has been resized.\nThe filesystem will be enlarged upon the next reboot" 20 60 2
+whiptail --msgbox "Root partition has been resized.\nThe filesystem will be enlarged upon the next reboot" 20 60 2
   fi
 }
 
@@ -616,6 +578,157 @@ do_advanced_menu() {
 
 # [Upgrade http://github.com/sentfanwyaerda/raspi-config/ ]
 
+do_fsroot_resize_menu() {
+  FUN=$(whiptail --title "Raspberry Pi Software Configuration Tool (raspi-config)" --menu "Expand Filesystem" $WT_HEIGHT $WT_WIDTH $WT_MENU_HEIGHT --cancel-button Back --ok-button Select \
+    "R0 Expand Filesystem (default)" "Ensures that all of the SD card (mmcblk0p1) storage is available to the OS" \
+    "R1 Expand Filesystem (NOOBS)" "Ensures that all of the SD card storage is available to the OS" \
+    "R2 Expand to Secure Split Filesystem" "Splits SD card into / (mmcblk0p1, READ ONLY) and /home (mmcblk0p5)" \
+    "R3 Expand Home Filesystem" "Expands /home (mmcblk0p5) to all of the SD card" \
+    3>&1 1>&2 2>&3)
+  RET=$?
+  if [ $RET -eq 1 ]; then
+    return 0
+  elif [ $RET -eq 0 ]; then
+    case "$FUN" in
+	  R0\ *) do_expand_rootfs ;;
+	  R1\ *) do_expand_NOOBS ;;
+	  R2\ *) do_expand_secure_split ;;
+	  R3\ *) do_expand_mmcblk0p5 ;;
+      *) whiptail --msgbox "Programmer error: unrecognized option" 20 60 1 ;;
+    esac || whiptail --msgbox "There was an error running option $FUN" 20 60 1
+  fi
+}
+
+do_expand_NOOBS() {
+    whiptail --msgbox "Expanding NOOBS is not implemented yet." 20 60 2
+}
+
+do_expand_mmcblk0p5() {
+  fdisk /dev/mmcblk0 <<EOF
+p
+d
+5
+d
+3
+p
+n
+e
+3
+
+
+n
+l
+
+
+p
+w
+EOF
+	ASK_TO_REBOOT=1
+	apply_resize2fs_once
+	echo "resize2fs /dev/mmcblk0p5" >> /etc/init.d/resize2fs_once
+}
+
+do_expand_secure_split() {
+  if ! [ -h /dev/root ]; then
+    whiptail --msgbox "/dev/root does not exist or is not a symlink. Don't know how to expand" 20 60 2
+    return 0
+  fi
+
+ROOT_PART=$(readlink /dev/root)
+  PART_NUM=${ROOT_PART#mmcblk0p}
+  if [ "$PART_NUM" = "$ROOT_PART" ]; then
+    whiptail --msgbox "/dev/root is not an SD card. Don't know how to expand" 20 60 2
+    return 0
+  fi
+
+  # NOTE: the NOOBS partition layout confuses parted. For now, let's only
+  # agree to work with a sufficiently simple partition layout
+  if [ "$PART_NUM" -ne 2 ]; then
+    whiptail --msgbox "Your partition layout is not currently supported by this tool. You are probably using NOOBS, in which case your root filesystem is already expanded anyway." 20 60 2
+    return 0
+  fi
+
+  LAST_PART_NUM=$(parted /dev/mmcblk0 -ms unit s p | tail -n 1 | cut -f 1 -d:)
+
+  if [ "$LAST_PART_NUM" != "$PART_NUM" ]; then
+    whiptail --msgbox "/dev/root is not the last partition. Don't know how to expand" 20 60 2
+    return 0
+  fi
+
+  # Get the starting offset of the root partition
+  PART_START=$(parted /dev/mmcblk0 -ms unit s p | grep "^${PART_NUM}" | cut -f 2 -d:)
+  [ "$PART_START" ] || return 1
+  # Return value will likely be error for fdisk as it fails to reload the
+  # partition table because the root fs is mounted
+  fdisk /dev/mmcblk0 <<EOF
+p
+d
+2
+n
+p
+2
+$PART_START
+12582912
+p
+n
+e
+3
+
+
+n
+l
+
+
+p
+w
+EOF
+		# add /home (/dev/mmcblk0p5) to /etc/fstab and format
+		echo "/dev/mmcblk0p5 /home ext4 defaults,errors=remount-ro 0 1" >> /etc/fstab
+		# the RPi wishes to reboot before:
+		apply_resize2fs_once
+		echo "mkfs --type=ext4 /dev/mmcblk0p5" >> /etc/init.d/resize2fs_once
+		ASK_TO_REBOOT=1
+		#update fstab
+		wget https://raw.github.com/sentfanwyaerda/raspi-config/master/toolset/fstab.whitebox -O /etc/fstab
+}
+apply_resize2fs_once() {
+	if[ ! -d /etc/init.d/resize2fs_once ]; then
+  # now set up an init.d script
+cat <<\EOF > /etc/init.d/resize2fs_once &&
+#!/bin/sh
+### BEGIN INIT INFO
+# Provides:          resize2fs_once
+# Required-Start:
+# Required-Stop:
+# Default-Start: 2 3 4 5 S
+# Default-Stop:
+# Short-Description: Resize the root filesystem to fill partition
+# Description:
+### END INIT INFO
+
+. /lib/lsb/init-functions
+
+case "$1" in
+  start)
+    log_daemon_msg "Starting resize2fs_once" &&
+    resize2fs /dev/root &&
+    rm /etc/init.d/resize2fs_once &&
+    update-rc.d resize2fs_once remove &&
+    log_end_msg $?
+    ;;
+  *)
+    echo "Usage: $0 start" >&2
+    exit 3
+    ;;
+esac
+EOF
+
+  chmod +x /etc/init.d/resize2fs_once &&
+  update-rc.d resize2fs_once defaults
+  
+  fi
+}
+
 do_server_menu() {
   FUN=$(whiptail --title "Raspberry Pi Software Configuration Tool (raspi-config)" --menu "Webserver Options" $WT_HEIGHT $WT_WIDTH $WT_MENU_HEIGHT --cancel-button Back --ok-button Select \
     "S1 Setup Git" "Installing and configuring Git" \
@@ -949,13 +1062,18 @@ do_sentfanwyaerda_update() {
     RASPIGITDIR=$(whiptail --inputbox "Where do you want to install raspi-config?" \
       20 70 -- "/var/lib/raspi-config" 3>&1 1>&2 2>&3)
 
-  if [ -d $RASPIGITDIR ]; then
-    git pull --work-tree=$RASPIGITDIR
+  if [ -z $RASPIGITDIR ]; then
+	wget https://raw.github.com/sentfanwyaerda/raspi-config/master/raspi-config -O /usr/bin/raspi-config
+  else
+    if [ -d $RASPIGITDIR ]; then
+      git pull --work-tree=$RASPIGITDIR
     else
-    mkdir $RASPIGITDIR &&
-    git clone https://github.com/sentfanwyaerda/raspi-config.git $RASPIGITDIR &&
-    ln -s $RASPIGITDIR/raspi-config /usr/bin/raspi-config
+      mkdir $RASPIGITDIR &&
+      git clone https://github.com/sentfanwyaerda/raspi-config.git $RASPIGITDIR &&
+      ln -s $RASPIGITDIR/raspi-config /usr/bin/raspi-config
+    fi
   fi
+  chmod +x /usr/bin/raspi-config
   printf "Sleeping 5 seconds before reloading raspi-config\n" &&
   sleep 5 &&
   exec raspi-config
@@ -969,7 +1087,7 @@ do_sentfanwyaerda_update() {
 calc_wt_size
 while true; do
   FUN=$(whiptail --title "Raspberry Pi Software Configuration Tool (raspi-config)" --menu "Setup Options" $WT_HEIGHT $WT_WIDTH $WT_MENU_HEIGHT --cancel-button Finish --ok-button Select \
-    "1 Expand Filesystem" "Ensures that all of the SD card storage is available to the OS" \
+    "1 Expand Filesystem >" "Ensures that all of the SD card storage is available to the OS" \
     "2 Change User Password" "Change password for the default user (pi)" \
     "3 Enable Boot to Desktop" "Choose whether to boot into a desktop environment or the command-line" \
     "4 Internationalisation Options >	" "Set up language and regional settings to match your location" \
@@ -985,7 +1103,7 @@ while true; do
     do_finish
   elif [ $RET -eq 0 ]; then
     case "$FUN" in
-      1\ *) do_expand_rootfs ;;
+      1\ *) do_fsroot_resize_menu ;;
       2\ *) do_change_pass ;;
       3\ *) do_boot_behaviour ;;
       4\ *) do_internationalisation_menu ;;
