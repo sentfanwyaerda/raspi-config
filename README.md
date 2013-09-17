@@ -20,6 +20,7 @@
 - expand_ro_rootfs &mdash; Works similair to expand_rootfs, but makes ``/`` **readonly** and adds ``/home``-partition with a set of symbolic links from ``/etc/fstab``, ``/var/www/`` and ``/var/backups/``. With the tools: ``freeze_rootfs``, ``unfreeze_rootfs``, ``backup_rootfs``, ``restore_rootfs``. WHY? Because this is one of the methods to limit data corruption of the SD-card, and adds a extra level of security to your system.
 - install GPIO and Python
 - [toolset](./toolset.md)
+- wifi configuration (patched from [mikerr](https://github.com/mikerr/raspi-config))
 
 ####Tested with:
 - Raspbian

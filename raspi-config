@@ -855,9 +855,9 @@ EOF
 		wget https://raw.github.com/sentfanwyaerda/raspi-config/master/toolset/fstab.whitebox -O /etc/fstab
 }
 apply_resize2fs_once() {
-	if[ ! -d /etc/init.d/resize2fs_once ]; then
-  # now set up an init.d script
-cat <<\EOF > /etc/init.d/resize2fs_once &&
+  if[ ! -f /etc/init.d/resize2fs_once ]; then
+    # now set up an init.d script
+    cat <<\EOF > /etc/init.d/resize2fs_once &&
 #!/bin/sh
 ### BEGIN INIT INFO
 # Provides:          resize2fs_once
@@ -886,8 +886,8 @@ case "$1" in
 esac
 EOF
 
-  chmod +x /etc/init.d/resize2fs_once &&
-  update-rc.d resize2fs_once defaults
+    chmod +x /etc/init.d/resize2fs_once &&
+    update-rc.d resize2fs_once defaults
   
   fi
 }
