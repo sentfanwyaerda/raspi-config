@@ -2,59 +2,97 @@
 #
 # rc.local
 #
-# This script is executed at the end of each mulituser runlevel.
+# This script is executed at the end of each multiuser runlevel.
 # Make sure that the script will "exit 0" on success or any other
-# value on error
+# value on error.
 #
-# In order to enable or disable this script just thange the execution
+# In order to enable or disable this script just change the execution
 # bits.
 #
 # By default this script does nothing.
 
 service ntp restart
 
+if [ -f /var/zero.blob ]; then
+        mount -o rw,remount /
+        rm /var/zero.blob
+        mount -o ro,remount /
+fi
+if [ -f /home/zero.blob ]; then
+        # /home is already rw
+        rm /home/zero.blob
+fi
+if [ -f /boot/zero.blob ]; then
+        mount -o rw,remount /boot
+        rm /boot/zero.blob
+        mount -o ro,remount /boot
+fi
+
+if [ ! -f /forcefsck ]; then
+        mount -o rw,remount /
+        touch /forcefsck
+        mount -o ro,remount /
+fi
+
 # Setting secondairy static IP address to eth0:0
 #ipdown eth0
 #ifup eth0
 
-if [ -n "$1" ] ; then
+if [ -n "$1" ]; then
 	ip="$1"
 else
 	ip="192.168.2.100"
 fi
-if [ -n "$2" ] ; then
+if [ -n "$2" ]; then
 	dev="$2"
 else
 	dev="eth0:0"
 fi
-ifconfig $dev $ip
-route add -host $ip dev $dev
 
-# Setting up Wireless Lan:
-wlan = 'wlan0'
-network = ''
-if [ -z $network ] && [ -z `ifconfig | grep -i $wlan`] && [ -z `iwlist $wlan scan | grep -i $network`]; then
-	ifconfig $wlan down
-	dhclient -r $wlan
-	ifconfig $wlan up
-	iwconfig $wlan essid "$network"
-	iwconfig $wlan mode Managed
-	dhclient $wlan
+if [ ! -n "`ifconfig | grep $ip`"  ]; then
+	echo "Binding $ip to $dev ";
+	ifconfig $dev $ip
+	route add -host $ip dev $dev
 fi
 
 # Restart Webservices
-/etc/init.d/apache2 restart
-#service apache restart
-#service mysql restart
 
+#mount -o rw,remount /
+#update-rc.d apache2 enable
+#update-rc.d samba enable
+#mount -o ro,remount /
+
+if [ ! -d /var/log/samba ]; then
+	mkdir /var/log/samba
+	touch /var/log/samba/log.nmbd
+	touch /var/log/samba/log.smbd
+fi
+if [ ! -f /etc/samba/smb.conf ] && [ -f /etc/samba-real/smb.conf ]; then
+	mkdir /var/lock/subsys
+	touch /var/lock/subsys/smb
+	cp /etc/samba-real/smb.conf /etc/samba/smb.conf
+	cp /etc/samba-real/gdbcommands /etc/samba/gdbcommands
+	#ln -s -d /etc/samba-real/tls /etc/samba/tls
+	mkdir /etc/samba/tls
+	ln -s /etc/samba-real/smb.conf.ucf-dist /etc/samba/smb.conf.ucf-dist
+	touch /etc/samba/dhcp.conf
+fi
 service samba restart
 
-# Removing the buffer file (optionally) created with zerofill
-if [ -f /var/zero.blob ] ; then
-	rm /var/zero.blob
+if [ ! -d /var/log/apache ]; then
+	mkdir /var/log/apache2
+	touch /var/log/apache2/error.log
 fi
+/etc/init.d/apache2 restart
 
-# Enforce fsck on each boot
-touch /forcefsck
+if [ -f /boot/config.txt ]; then
+	. /boot/config.txt
+	working_memkb=`cat /proc/meminfo | grep "MemTotal" | sed 's/ \+/\t/g' | cut -f2`;
+	working_mem=`echo "( $working_memkb -256) / 1000" | bc`
+	IP=`ifconfig | grep "Bcast" | sed 's/ \+/\t/g' | cut -f3 | cut -d: -f2 | sed ':a;N;$!ba;s/\n/, /g'`
+
+	echo "`uname -n` ($IP) is running at ${arm_freq}MHz (${core_freq}MHz core) and $working_mem/${gpu_mem}Mb split @${sdram_freq}MHz with +${over_voltage}V"
+
+fi
 
 exit 0

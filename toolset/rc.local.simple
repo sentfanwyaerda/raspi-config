@@ -1,0 +1,60 @@
+#!/bin/sh -e
+#
+# rc.local
+#
+# This script is executed at the end of each mulituser runlevel.
+# Make sure that the script will "exit 0" on success or any other
+# value on error
+#
+# In order to enable or disable this script just thange the execution
+# bits.
+#
+# By default this script does nothing.
+
+service ntp restart
+
+# Setting secondairy static IP address to eth0:0
+#ipdown eth0
+#ifup eth0
+
+if [ -n "$1" ] ; then
+	ip="$1"
+else
+	ip="192.168.2.100"
+fi
+if [ -n "$2" ] ; then
+	dev="$2"
+else
+	dev="eth0:0"
+fi
+ifconfig $dev $ip
+route add -host $ip dev $dev
+
+# Setting up Wireless Lan:
+wlan = 'wlan0'
+network = ''
+if [ -z $network ] && [ -z `ifconfig | grep -i $wlan`] && [ -z `iwlist $wlan scan | grep -i $network`]; then
+	ifconfig $wlan down
+	dhclient -r $wlan
+	ifconfig $wlan up
+	iwconfig $wlan essid "$network"
+	iwconfig $wlan mode Managed
+	dhclient $wlan
+fi
+
+# Restart Webservices
+/etc/init.d/apache2 restart
+#service apache restart
+#service mysql restart
+
+service samba restart
+
+# Removing the buffer file (optionally) created with zerofill
+if [ -f /var/zero.blob ] ; then
+	rm /var/zero.blob
+fi
+
+# Enforce fsck on each boot
+touch /forcefsck
+
+exit 0
